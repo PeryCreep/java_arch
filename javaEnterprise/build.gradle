@@ -1,0 +1,30 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.2'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'org'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation group: 'org.telegram', name: 'telegrambots-spring-boot-starter', version: '6.9.7.1'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//	implementation group: 'org.telegram', name: 'telegrambots-client', version: '8.2.0'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
