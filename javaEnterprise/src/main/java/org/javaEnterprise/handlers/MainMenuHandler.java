@@ -3,6 +3,7 @@ package org.javaEnterprise.handlers;
 import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.services.UserSessionService;
+import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -16,24 +17,25 @@ import java.util.List;
 public class MainMenuHandler implements StateHandler {
 
     @Override
-    public void handle(Update update, Long chatId, UserSessionService sessionService, CatsBot bot) {
+    public void handle(Update update, UserSessionService sessionService, CatsBot bot) {
+        Long chatId = bot.getChatId(update);
+        if (chatId == null) return;
 
         List<InlineKeyboardButton> row = new ArrayList<>(List.of(
-                InlineKeyboardButton.builder().text("Мои котики").callbackData("VIEW_MY_CATS").build(),
-                InlineKeyboardButton.builder().text("Смотреть котиков").callbackData("VIEW_RANDOM_CAT").build(),
-                InlineKeyboardButton.builder().text("Добавить котика").callbackData("ADD_CAT_IMAGE").build()
+                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.my.cat")).callbackData("VIEW_MY_CATS").build(),
+                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.random.cat")).callbackData("VIEW_RANDOM_CAT").build(),
+                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.add.cat")).callbackData("ADD_CAT_IMAGE").build()
         ));
-
 
         InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
                 .keyboardRow(row)
                 .build();
 
         SendMessage message = SendMessage.builder()
-                        .chatId(chatId)
-                        .text("Это бот котиков, вот доступные действия: ")
-                        .replyMarkup(keyboard)
-                        .build();
+                .chatId(chatId)
+                .text(MessageBundle.getMessage("view.main"))
+                .replyMarkup(keyboard)
+                .build();
         bot.sendMessage(message);
     }
 
