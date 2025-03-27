@@ -2,7 +2,6 @@ package org.javaEnterprise.handlers;
 
 import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.handlers.states.StateHandler;
-import org.javaEnterprise.services.UserSessionService;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,7 +16,7 @@ import java.util.List;
 public class MainMenuHandler implements StateHandler {
 
     @Override
-    public void handle(Update update, UserSessionService sessionService, CatsBot bot) {
+    public void handle(Update update, CatsBot bot) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 

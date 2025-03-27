@@ -18,8 +18,11 @@ public class BotConfig {
             MainMenuHandler mainMenuHandler,
             ViewMyCatsHandler viewMyCatsHandler,
             AddCatImageStateHandler addCatImageHandler,
+            AddCatNameStateHandler addCatNameHandler,
+            AddCatSaveStateHandler addCatSaveHandler,
             ViewRandomCatHandler randomCatHandler,
-            AwaitNameHandler awaitNameHandler
+            AwaitNameHandler awaitNameHandler,
+            CatDetailsHandler catDetailsHandler
     ) {
         Map<UserState, StateHandler> map = new EnumMap<>(UserState.class);
         map.put(UserState.START, startHandler);
@@ -27,7 +30,10 @@ public class BotConfig {
         map.put(UserState.MAIN_MENU, mainMenuHandler);
         map.put(UserState.VIEW_MY_CATS, viewMyCatsHandler);
         map.put(UserState.ADD_CAT_IMAGE, addCatImageHandler);
+        map.put(UserState.ADD_CAT_NAME, addCatNameHandler);
+        map.put(UserState.ADD_CAT_SAVE, addCatSaveHandler);
         map.put(UserState.VIEW_RANDOM_CAT, randomCatHandler);
+        map.put(UserState.VIEW_CAT_DETAILS, catDetailsHandler);
         return map;
     }
 }
