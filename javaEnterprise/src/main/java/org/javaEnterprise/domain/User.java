@@ -2,6 +2,8 @@ package org.javaEnterprise.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -18,6 +20,9 @@ public class User {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CatRating> ratings = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -41,5 +46,13 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public List<CatRating> getRatings() {
+        return ratings;
+    }
+    
+    public void setRatings(List<CatRating> ratings) {
+        this.ratings = ratings;
     }
 }

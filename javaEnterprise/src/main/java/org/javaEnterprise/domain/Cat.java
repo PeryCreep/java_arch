@@ -2,6 +2,8 @@ package org.javaEnterprise.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "cats")
@@ -29,6 +31,9 @@ public class Cat {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    
+    @OneToMany(mappedBy = "cat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CatRating> ratings = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -67,15 +72,43 @@ public class Cat {
         return likesCount;
     }
 
-    public void setLikesCount(Integer likesCount) {
-        this.likesCount = likesCount;
-    }
-
     public Integer getDislikesCount() {
         return dislikesCount;
     }
 
-    public void setDislikesCount(Integer dislikesCount) {
-        this.dislikesCount = dislikesCount;
+    public List<CatRating> getRatings() {
+        return ratings;
+    }
+
+    /**
+     * Увеличивает счетчик лайков
+     */
+    public void incrementLikes() {
+        this.likesCount++;
+    }
+    
+    /**
+     * Уменьшает счетчик лайков
+     */
+    public void decrementLikes() {
+        if (this.likesCount > 0) {
+            this.likesCount--;
+        }
+    }
+    
+    /**
+     * Увеличивает счетчик дизлайков
+     */
+    public void incrementDislikes() {
+        this.dislikesCount++;
+    }
+    
+    /**
+     * Уменьшает счетчик дизлайков
+     */
+    public void decrementDislikes() {
+        if (this.dislikesCount > 0) {
+            this.dislikesCount--;
+        }
     }
 }

@@ -4,12 +4,17 @@ import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.domain.User;
 import org.javaEnterprise.handlers.states.StateHandler;
+import org.javaEnterprise.handlers.states.UserState;
 import org.javaEnterprise.services.CatService;
+import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.UserService;
+import org.javaEnterprise.services.enums.CallbackData;
+import org.javaEnterprise.util.ErrorHandler;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -31,31 +36,76 @@ public class ViewMyCatsHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot) {
+    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
-        User user = userService.findByChatId(chatId)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
+        if (update.hasCallbackQuery() && update.getCallbackQuery().getData().startsWith("DELETE_CAT_")) {
+            handleDeleteCat(update, bot, userDataFacade);
+            return;
+        }
 
-        int page = getCurrentPage(chatId, bot);
-        Page<Cat> catPage = catService.getCatsByAuthor(user.getId(), page, PAGE_SIZE);
+        try {
+            User user = userService.findByChatId(chatId)
+                    .orElseThrow(() -> new NoSuchElementException("User not found"));
 
-        if (catPage.isEmpty()) {
-            sendEmptyMessage(chatId, bot);
-        } else {
-            sendCatsPage(chatId, catPage, bot);
+            int page = getCurrentPage(chatId, userDataFacade);
+            Page<Cat> catPage = catService.getCatsByAuthor(user.getId(), page, PAGE_SIZE);
+
+            if (catPage.isEmpty()) {
+                sendEmptyMessage(chatId, bot);
+            } else {
+                sendCatsPage(chatId, catPage, bot, userDataFacade);
+            }
+        } catch (Exception e) {
+            ErrorHandler.handleError(chatId, bot, e);
         }
     }
 
-    private int getCurrentPage(Long chatId, CatsBot bot) {
-        Integer page = bot.getTempData(chatId, "myCatsPage", Integer.class);
+    private void handleDeleteCat(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+        Long chatId = bot.getChatId(update);
+        Long catId = Long.parseLong(update.getCallbackQuery().getData().split("_")[2]);
+        
+        try {
+            User user = userService.findByChatId(chatId).orElseThrow();
+            catService.deleteCat(catId, user.getId());
+            editMessageAfterDelete(update, bot);
+            
+            int page = getCurrentPage(chatId, userDataFacade);
+            Page<Cat> catPage = catService.getCatsByAuthor(user.getId(), page, PAGE_SIZE);
+            
+            if (catPage.isEmpty() && page > 0) {
+                userDataFacade.storePage(chatId, page - 1);
+                handle(update, bot, userDataFacade);
+            } else {
+                if (catPage.isEmpty()) {
+                    sendEmptyMessage(chatId, bot);
+                } else {
+                    sendCatsPage(chatId, catPage, bot, userDataFacade);
+                }
+            }
+        } catch (Exception e) {
+            ErrorHandler.handleError(chatId, bot, e);
+        }
+    }
+
+    private void editMessageAfterDelete(Update update, CatsBot bot) {
+        EditMessageText editMessage = EditMessageText.builder()
+                .chatId(update.getCallbackQuery().getMessage().getChatId())
+                .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                .text(MessageBundle.getMessage("view.cat.delete.success"))
+                .build();
+
+        bot.editMessage(editMessage);
+    }
+
+    private int getCurrentPage(Long chatId, UserDataFacade userDataFacade) {
+        Integer page = userDataFacade.getPage(chatId);
         return page != null ? page : 0;
     }
 
-    private void sendCatsPage(Long chatId, Page<Cat> catPage, CatsBot bot) {
-
-        bot.storeTempData(chatId, "myCatsPage", catPage.getNumber());
+    private void sendCatsPage(Long chatId, Page<Cat> catPage, CatsBot bot, UserDataFacade userDataFacade) {
+        userDataFacade.storePage(chatId, catPage.getNumber());
         String caption = String.format(MessageBundle.getMessage("view.my.cats.page"),
                 catPage.getNumber() + 1,
                 catPage.getTotalPages());
@@ -90,7 +140,7 @@ public class ViewMyCatsHandler implements StateHandler {
         keyboard.add(List.of(
                 InlineKeyboardButton.builder()
                         .text(MessageBundle.getMessage("button.back"))
-                        .callbackData("MAIN_MENU")
+                        .callbackData(CallbackData.MAIN_MENU.name())
                         .build()
         ));
 
@@ -102,14 +152,14 @@ public class ViewMyCatsHandler implements StateHandler {
 
         if (catPage.hasPrevious()) {
             buttons.add(InlineKeyboardButton.builder()
-                    .text("◀️")
+                    .text(MessageBundle.getMessage("view.my.cat.back"))
                     .callbackData("MYCATS_PAGE_" + (catPage.getNumber() - 1))
                     .build());
         }
 
         if (catPage.hasNext()) {
             buttons.add(InlineKeyboardButton.builder()
-                    .text("▶️")
+                    .text(MessageBundle.getMessage("view.my.cat.next"))
                     .callbackData("MYCATS_PAGE_" + (catPage.getNumber() + 1))
                     .build());
         }

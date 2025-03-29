@@ -2,6 +2,7 @@ package org.javaEnterprise.handlers;
 
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.UserState;
+import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.UserService;
 import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.util.MessageBundle;
@@ -9,17 +10,21 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+
 @Component
 public class AwaitNameHandler implements StateHandler {
 
     private final UserService userService;
 
-    public AwaitNameHandler(UserService userService) {
+    private final HandlerProvider handlerProvider;
+
+    public AwaitNameHandler(UserService userService, HandlerProvider handlerProvider) {
         this.userService = userService;
+        this.handlerProvider = handlerProvider;
     }
 
     @Override
-    public void handle(Update update, CatsBot bot) {
+    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
@@ -34,7 +39,12 @@ public class AwaitNameHandler implements StateHandler {
         String name = update.getMessage().getText();
         userService.saveUserName(chatId, name);
 
-        StateHandler nextHandler = bot.getHandlers().get(UserState.MAIN_MENU);
-        nextHandler.handle(update, bot);
+        StateHandler nextHandler = nextHandler();
+        nextHandler.handle(update, bot, userDataFacade);
+    }
+
+    @Override
+    public StateHandler nextHandler() {
+        return handlerProvider.get(UserState.MAIN_MENU);
     }
 }

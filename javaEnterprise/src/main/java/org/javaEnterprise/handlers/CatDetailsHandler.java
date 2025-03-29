@@ -4,6 +4,9 @@ import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.services.CatService;
+import org.javaEnterprise.services.UserDataFacade;
+import org.javaEnterprise.services.enums.CallbackData;
+import org.javaEnterprise.util.ErrorHandler;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -25,14 +28,14 @@ public class CatDetailsHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot) {
+    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
         String callbackData = update.getCallbackQuery().getData();
 
         if (!callbackData.startsWith("VIEW_CAT_") || callbackData.split("_").length != 3) {
-            bot.sendMessage(SendMessage.builder().chatId(chatId).text("Некорректный запрос").build());
+            ErrorHandler.handleError(chatId, bot, "Некорректный запрос");
             return;
         }
 
@@ -40,10 +43,10 @@ public class CatDetailsHandler implements StateHandler {
             Long catId = Long.parseLong(callbackData.split("_")[2]);
             catService.getCatById(catId).ifPresentOrElse(
                     cat -> sendCatDetails(cat, chatId, bot),
-                    () -> sendError(chatId, bot)
+                    () -> ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.not_found"))
             );
         } catch (NumberFormatException e) {
-            bot.sendMessage(SendMessage.builder().chatId(chatId).text("Ошибка формата ID котика").build());
+            ErrorHandler.handleError(chatId, bot, "Ошибка формата ID котика");
         }
     }
 
@@ -59,12 +62,9 @@ public class CatDetailsHandler implements StateHandler {
                     .replyMarkup(createDetailsKeyboard(cat.getId()))
                     .build();
 
-            bot.execute(sendPhoto);
+            bot.sendPhoto(sendPhoto);
         } catch (Exception e) {
-            bot.sendMessage(SendMessage.builder()
-                    .chatId(chatId)
-                    .text(MessageBundle.getMessage("error.cat.load"))
-                    .build());
+            ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.load"));
         }
     }
 
@@ -80,17 +80,10 @@ public class CatDetailsHandler implements StateHandler {
                         List.of(
                                 InlineKeyboardButton.builder()
                                         .text(MessageBundle.getMessage("button.back"))
-                                        .callbackData("MYCATS_BACK")
+                                        .callbackData(CallbackData.MYCATS_BACK.name())
                                         .build()
                         )
                 ))
                 .build();
-    }
-
-    private void sendError(Long chatId, CatsBot bot) {
-        bot.sendMessage(SendMessage.builder()
-                .chatId(chatId)
-                .text(MessageBundle.getMessage("error.cat.not_found"))
-                .build());
     }
 }

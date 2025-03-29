@@ -3,7 +3,11 @@ package org.javaEnterprise.handlers;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.handlers.states.UserState;
+import org.javaEnterprise.services.UserDataFacade;
+import org.javaEnterprise.services.enums.CallbackData;
+import org.javaEnterprise.services.enums.UserTempDataKey;
 import org.javaEnterprise.util.MessageBundle;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -15,28 +19,34 @@ import java.util.List;
 @Component
 public class AddCatNameStateHandler implements StateHandler {
 
+    private final HandlerProvider handlerProvider;
+
+    public AddCatNameStateHandler(HandlerProvider handlerProvider) {
+        this.handlerProvider = handlerProvider;
+    }
+
     @Override
-    public void handle(Update update, CatsBot bot) {
+    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
         if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
-            if ("CANCEL_ADD_CAT".equals(callbackData)) {
-                bot.setState(chatId, UserState.MAIN_MENU);
-                StateHandler handler = bot.getHandlers().get(UserState.MAIN_MENU);
-                handler.handle(update, bot);
+            if (CallbackData.CANCEL_ADD_CAT.name().equals(callbackData)) {
+                userDataFacade.setState(chatId, UserState.MAIN_MENU);
+                StateHandler handler = handlerProvider.get(UserState.MAIN_MENU);
+                handler.handle(update, bot, userDataFacade);
                 return;
             }
         }
 
         if (update.hasMessage() && update.getMessage().hasText()) {
             String catName = update.getMessage().getText();
-            bot.storeTempData(chatId, "cat_name", catName);
+            userDataFacade.storeTextData(chatId, UserTempDataKey.CAT_NAME.name(), catName);
 
-            bot.setState(chatId, UserState.ADD_CAT_SAVE);
-            StateHandler handler = bot.getHandlers().get(UserState.ADD_CAT_SAVE);
-            handler.handle(update, bot);
+            userDataFacade.setState(chatId, UserState.ADD_CAT_SAVE);
+            StateHandler handler = nextHandler();
+            handler.handle(update, bot, userDataFacade);
             return;
         }
 
@@ -44,7 +54,7 @@ public class AddCatNameStateHandler implements StateHandler {
                 .keyboard(List.of(List.of(
                         InlineKeyboardButton.builder()
                                 .text(MessageBundle.getMessage("button.back"))
-                                .callbackData("CANCEL_ADD_CAT")
+                                .callbackData(CallbackData.CANCEL_ADD_CAT.name())
                                 .build()
                 )))
                 .build();
@@ -55,4 +65,9 @@ public class AddCatNameStateHandler implements StateHandler {
                 .replyMarkup(keyboard)
                 .build());
     }
-} 
+
+    @Override
+    public StateHandler nextHandler() {
+        return handlerProvider.get(UserState.ADD_CAT_SAVE);
+    }
+}

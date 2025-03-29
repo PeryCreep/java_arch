@@ -3,6 +3,7 @@ package org.javaEnterprise.handlers;
 import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.UserState;
+import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.UserService;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
@@ -13,19 +14,22 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class StartStateHandler implements StateHandler {
     private final UserService userService;
 
-    public StartStateHandler(UserService userService) {
+    private final HandlerProvider handlerProvider;
+
+    public StartStateHandler(UserService userService,HandlerProvider handlerProvider) {
         this.userService = userService;
+        this.handlerProvider = handlerProvider;
     }
 
     @Override
-    public void handle(Update update, CatsBot bot) {
+    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
         if (userService.isUserExists(chatId)) {
-            bot.setState(chatId, UserState.MAIN_MENU);
-            StateHandler mainMenuHandler = bot.getHandlers().get(UserState.MAIN_MENU);
-            mainMenuHandler.handle(update, bot);
+            userDataFacade.setState(chatId, UserState.MAIN_MENU);
+            StateHandler mainMenuHandler = nextHandler();
+            mainMenuHandler.handle(update, bot, userDataFacade);
             return;
         }
 
@@ -34,11 +38,11 @@ public class StartStateHandler implements StateHandler {
         welcomeMessage.setText(MessageBundle.getMessage("view.hi"));
         bot.sendMessage(welcomeMessage);
         
-        bot.setState(chatId, UserState.AWAIT_NAME);
-        
-        SendMessage namePrompt = new SendMessage();
-        namePrompt.setChatId(chatId.toString());
-        namePrompt.setText(MessageBundle.getMessage("await.name.prompt"));
-        bot.sendMessage(namePrompt);
+        userDataFacade.setState(chatId, UserState.AWAIT_NAME);
+    }
+
+    @Override
+    public StateHandler nextHandler() {
+        return handlerProvider.get(UserState.MAIN_MENU);
     }
 }
