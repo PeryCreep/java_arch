@@ -1,41 +1,39 @@
 package org.javaEnterprise.domain;
 
-import jakarta.persistence.*;
-
-
-@Entity
-@Table(name = "cat_ratings", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "cat_id"}))
 public class CatRating {
+
+    private Long id;
+    private User user;
+    private Cat cat;
+    private boolean like;
 
     public CatRating() {
     }
-
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "cat_id", nullable = false)
-    private Cat cat;
-
-    @Column(name = "is_like", nullable = false)
-    private boolean like;
-
 
     public CatRating(User user, Cat cat, boolean like) {
         this.user = user;
         this.cat = cat;
         this.like = like;
     }
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public User getUser() {
         return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setCat(Cat cat) {
+        this.cat = cat;
     }
 
     public Cat getCat() {

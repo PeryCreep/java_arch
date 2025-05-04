@@ -1,6 +1,7 @@
 package org.javaEnterprise.util;
 
 import org.javaEnterprise.controllers.CatsBot;
+import org.javaEnterprise.handlers.ActionPrefixConstants;
 import org.javaEnterprise.handlers.HandlerProvider;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.UserState;
@@ -17,13 +18,13 @@ public class CallbackQueryHandler {
         String callbackData = update.getCallbackQuery().getData();
         Long chatId = bot.getChatId(update);
         
-        if (callbackData.startsWith("LIKE_") || callbackData.startsWith("DISLIKE_")) {
+        if (callbackData.startsWith(ActionPrefixConstants.LIKE.name() + "_") || callbackData.startsWith(ActionPrefixConstants.DISLIKE.name() + "_")) {
             StateHandler handler = handlerProvider.get(UserState.VIEW_RANDOM_CAT);
             handler.handle(update, bot, bot.getUserDataFacade());
             return true;
         }
 
-        if (callbackData.startsWith("VIEW_CAT_")) {
+        if (callbackData.startsWith(ActionPrefixConstants.VIEW_CAT.name() + "_")) {
             StateHandler handler = handlerProvider.get(UserState.VIEW_CAT_DETAILS);
             handler.handle(update, bot, bot.getUserDataFacade());
             return true;
@@ -35,7 +36,7 @@ public class CallbackQueryHandler {
             return true;
         }
 
-        if (callbackData.startsWith("MYCATS_PAGE_")) {
+        if (callbackData.startsWith(ActionPrefixConstants.MYCATS_PAGE.name() + "_")) {
             int page = Integer.parseInt(callbackData.split("_")[2]);
             bot.getUserDataFacade().storePage(chatId, page);
             StateHandler handler = handlerProvider.get(UserState.VIEW_MY_CATS);
@@ -43,7 +44,7 @@ public class CallbackQueryHandler {
             return true;
         }
 
-        if (callbackData.startsWith("DELETE_CAT_")) {
+        if (callbackData.startsWith(ActionPrefixConstants.DELETE_CAT.name() + "_")) {
             StateHandler handler = handlerProvider.get(UserState.VIEW_MY_CATS);
             handler.handle(update, bot, bot.getUserDataFacade());
             return true;

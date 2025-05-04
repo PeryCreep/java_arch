@@ -1,35 +1,37 @@
 package org.javaEnterprise.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.OneToMany;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "users")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true, nullable = false)
     private Long chatId;
-
-    @Column(nullable = false)
     private String name;
-
-    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CatRating> ratings = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public User() {
     }
+
+    public User(Long id, Long chatId, String name, LocalDateTime createdAt) {
+        this.id = id;
+        this.chatId = chatId;
+        this.name = name;
+        this.createdAt = createdAt;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Long getChatId() {
@@ -54,5 +56,13 @@ public class User {
     
     public void setRatings(List<CatRating> ratings) {
         this.ratings = ratings;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

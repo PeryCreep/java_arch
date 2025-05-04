@@ -13,7 +13,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -36,10 +35,14 @@ public class ViewRandomCatHandler implements StateHandler {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
-        if (update.hasCallbackQuery() && 
-            (update.getCallbackQuery().getData().startsWith("LIKE_") || 
-             update.getCallbackQuery().getData().startsWith("DISLIKE_"))) {
-            handleRatingCallback(update, bot, userDataFacade);
+        String callbackData = update.getCallbackQuery().getData();
+        String[] parts = callbackData.split("_");
+
+        if (update.hasCallbackQuery() && parts[0].equals(ActionPrefixConstants.LIKE.name())) {
+            handleRatingCallback(update, bot, true, Long.parseLong(parts[1]));
+            return;
+        } else if(update.hasCallbackQuery() && parts[0].equals(ActionPrefixConstants.DISLIKE.name())) {
+            handleRatingCallback(update, bot, false, Long.parseLong(parts[1]));
             return;
         }
 
@@ -54,12 +57,8 @@ public class ViewRandomCatHandler implements StateHandler {
         sendCatWithButtons(cat, chatId, bot);
     }
 
-    private void handleRatingCallback(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    private void handleRatingCallback(Update update, CatsBot bot, Boolean isLike, Long catId) {
         Long chatId = bot.getChatId(update);
-        String callbackData = update.getCallbackQuery().getData();
-        String[] parts = callbackData.split("_");
-        Long catId = Long.parseLong(parts[1]);
-        boolean isLike = "LIKE".equals(parts[0]);
 
         try {
             catService.rateCat(catId, chatId, isLike);
@@ -113,8 +112,8 @@ public class ViewRandomCatHandler implements StateHandler {
         return InlineKeyboardMarkup.builder()
                 .keyboard(List.of(
                         List.of(
-                                createRatingButton("LIKE", MessageBundle.getMessage("view.random.cat.like"), cat.getLikesCount(), cat.getId()),
-                                createRatingButton("DISLIKE", MessageBundle.getMessage("view.random.cat.dislike"), cat.getDislikesCount(), cat.getId())
+                                createRatingButton(ActionPrefixConstants.LIKE.name(), MessageBundle.getMessage("view.random.cat.like"), cat.getLikesCount(), cat.getId()),
+                                createRatingButton(ActionPrefixConstants.DISLIKE.name(), MessageBundle.getMessage("view.random.cat.dislike"), cat.getDislikesCount(), cat.getId())
                         ),
                         List.of(createBackButton())
                 ))

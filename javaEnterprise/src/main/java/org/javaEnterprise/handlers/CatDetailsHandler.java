@@ -34,7 +34,7 @@ public class CatDetailsHandler implements StateHandler {
 
         String callbackData = update.getCallbackQuery().getData();
 
-        if (!callbackData.startsWith("VIEW_CAT_") || callbackData.split("_").length != 3) {
+        if (!callbackData.startsWith(ActionPrefixConstants.VIEW_CAT.name() + "_") || callbackData.split("_").length != 3) {
             ErrorHandler.handleError(chatId, bot, "Некорректный запрос");
             return;
         }

@@ -1,47 +1,42 @@
 package org.javaEnterprise.domain;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "cats")
 public class Cat {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
     private String name;
-
-    @Lob
-    @Column(name = "photo_data", nullable = false)
     private byte[] photoData;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
     private User author;
-
-    @Column(name = "likes_count", nullable = false)
-    private Integer likesCount = 0;
-
-    @Column(name = "dislikes_count", nullable = false)
-    private Integer dislikesCount = 0;
-
-    @Column(name = "created_at", nullable = false)
+    private Integer likesCount;
+    private Integer dislikesCount;
     private LocalDateTime createdAt;
-    
-    @OneToMany(mappedBy = "cat", cascade = CascadeType.ALL, orphanRemoval = true)
+
     private List<CatRating> ratings = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public Cat() {
+        this.likesCount = 0;
+        this.dislikesCount = 0;
+    }
+
+    public Cat(Long id, String name, byte[] photoData, User author, Integer likesCount, 
+               Integer dislikesCount, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.photoData = photoData;
+        this.author = author;
+        this.likesCount = likesCount != null ? likesCount : 0;
+        this.dislikesCount = dislikesCount != null ? dislikesCount : 0;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -80,35 +75,31 @@ public class Cat {
         return ratings;
     }
 
-    /**
-     * Увеличивает счетчик лайков
-     */
     public void incrementLikes() {
         this.likesCount++;
     }
-    
-    /**
-     * Уменьшает счетчик лайков
-     */
+
     public void decrementLikes() {
         if (this.likesCount > 0) {
             this.likesCount--;
         }
     }
-    
-    /**
-     * Увеличивает счетчик дизлайков
-     */
+
     public void incrementDislikes() {
         this.dislikesCount++;
     }
-    
-    /**
-     * Уменьшает счетчик дизлайков
-     */
+
     public void decrementDislikes() {
         if (this.dislikesCount > 0) {
             this.dislikesCount--;
         }
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

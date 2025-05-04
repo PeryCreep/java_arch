@@ -3,8 +3,8 @@ package org.javaEnterprise.services;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.domain.CatRating;
 import org.javaEnterprise.domain.User;
-import org.javaEnterprise.repository.CatRatingRepository;
-import org.javaEnterprise.repository.CatRepository;
+import org.javaEnterprise.domain.repository.CatRatingRepository;
+import org.javaEnterprise.domain.repository.CatRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -33,6 +33,10 @@ public class CatService {
     public Cat addCat(Long authorId, String name, byte[] photoData) {
         User author = userService.findByChatId(authorId)
                 .orElseGet(() -> userService.createUser(authorId, "User" + authorId));
+        
+        if (author.getId() == null) {
+            author = userService.save(author);
+        }
 
         Cat cat = new Cat();
         cat.setName(name);
@@ -63,17 +67,7 @@ public class CatService {
 
         catRatingRepository.deleteAll(cat.getRatings());
 
-        catRepository.delete(cat);
-    }
-
-    @Transactional(readOnly = true)
-    public long getActualLikesCount(Cat cat) {
-        return catRatingRepository.countByCatAndLikeStatus(cat, true);
-    }
-
-    @Transactional(readOnly = true)
-    public long getActualDislikesCount(Cat cat) {
-        return catRatingRepository.countByCatAndLikeStatus(cat, false);
+        catRepository.deleteById(cat.getId());
     }
 
     @Transactional
