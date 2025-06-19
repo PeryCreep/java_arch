@@ -75,7 +75,7 @@ public class CatService {
         Cat cat = catRepository.findById(catId)
                 .orElseThrow(() -> new IllegalStateException("Кот не найден"));
         User user = userService.findByChatId(userId)
-                .orElseGet(() -> userService.createUser(userId, "User" + userId));
+                .orElseThrow(() -> new IllegalStateException("Неизвестный пользователь"));
         Optional<CatRating> existingRating = catRatingRepository.findByCatAndUser(cat, user);
         
         if (existingRating.isPresent()) {
@@ -85,24 +85,11 @@ public class CatService {
                 return false;
             }
 
-            if (isLike) {
-                cat.decrementDislikes();
-                cat.incrementLikes();
-            } else {
-                cat.decrementLikes();
-                cat.incrementDislikes();
-            }
-
             rating.setLike(isLike);
             catRatingRepository.save(rating);
         } else {
             CatRating rating = new CatRating(user, cat, isLike);
             catRatingRepository.save(rating);
-            if (isLike) {
-                cat.incrementLikes();
-            } else {
-                cat.incrementDislikes();
-            }
         }
         
         catRepository.save(cat);

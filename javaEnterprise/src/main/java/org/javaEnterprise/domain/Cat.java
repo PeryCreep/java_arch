@@ -9,15 +9,11 @@ public class Cat {
     private String name;
     private byte[] photoData;
     private User author;
-    private Integer likesCount;
-    private Integer dislikesCount;
     private LocalDateTime createdAt;
 
     private List<CatRating> ratings = new ArrayList<>();
 
     public Cat() {
-        this.likesCount = 0;
-        this.dislikesCount = 0;
     }
 
     public Cat(Long id, String name, byte[] photoData, User author, Integer likesCount, 
@@ -26,8 +22,6 @@ public class Cat {
         this.name = name;
         this.photoData = photoData;
         this.author = author;
-        this.likesCount = likesCount != null ? likesCount : 0;
-        this.dislikesCount = dislikesCount != null ? dislikesCount : 0;
         this.createdAt = createdAt;
     }
 
@@ -63,37 +57,10 @@ public class Cat {
         this.author = author;
     }
 
-    public Integer getLikesCount() {
-        return likesCount;
-    }
-
-    public Integer getDislikesCount() {
-        return dislikesCount;
-    }
-
     public List<CatRating> getRatings() {
         return ratings;
     }
 
-    public void incrementLikes() {
-        this.likesCount++;
-    }
-
-    public void decrementLikes() {
-        if (this.likesCount > 0) {
-            this.likesCount--;
-        }
-    }
-
-    public void incrementDislikes() {
-        this.dislikesCount++;
-    }
-
-    public void decrementDislikes() {
-        if (this.dislikesCount > 0) {
-            this.dislikesCount--;
-        }
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
