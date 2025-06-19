@@ -25,12 +25,6 @@ public class CatEntity {
     @JoinColumn(name = "author_id", nullable = false)
     private UserEntity author;
 
-    @Column(name = "likes_count", nullable = false)
-    private Integer likesCount = 0;
-
-    @Column(name = "dislikes_count", nullable = false)
-    private Integer dislikesCount = 0;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -72,22 +66,6 @@ public class CatEntity {
 
     public void setAuthor(UserEntity author) {
         this.author = author;
-    }
-
-    public Integer getLikesCount() {
-        return likesCount;
-    }
-
-    public void setLikesCount(Integer likesCount) {
-        this.likesCount = likesCount;
-    }
-
-    public Integer getDislikesCount() {
-        return dislikesCount;
-    }
-
-    public void setDislikesCount(Integer dislikesCount) {
-        this.dislikesCount = dislikesCount;
     }
     
     public LocalDateTime getCreatedAt() {

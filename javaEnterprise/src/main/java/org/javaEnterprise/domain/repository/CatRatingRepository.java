@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface CatRatingRepository {
 
     Optional<CatRating> findByCatAndUser(Cat cat, User user);
+    List<CatRating> listByCat(Cat cat);
 
     long countByCatAndLikeStatus(Cat cat, boolean likeStatus);
 

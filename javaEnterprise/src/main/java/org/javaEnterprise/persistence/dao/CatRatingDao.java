@@ -115,6 +115,16 @@ public class CatRatingDao implements CatRatingRepository {
         }
     }
 
+    public List<CatRating> listByCat(Cat cat) {
+        return entityManager.createQuery(
+                        "SELECT cr FROM CatRatingEntity cr WHERE cr.cat.id = :catId",
+                        CatRatingEntity.class)
+                .setParameter("catId", cat.getId())
+                .getResultList().stream()
+                .map(mapper::catRatingToDomain)
+                .toList();
+    }
+
     private Optional<CatRatingEntity> findRatingEntity(Long catId, Long userId) {
         try {
             TypedQuery<CatRatingEntity> query = entityManager.createQuery(

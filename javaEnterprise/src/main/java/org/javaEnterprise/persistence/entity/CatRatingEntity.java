@@ -68,20 +68,4 @@ public class CatRatingEntity {
     public void setLike(boolean like) {
         this.like = like;
     }
-
-//    public CatRating toDomainObject() {
-//        CatRating rating = new CatRating();
-//        rating.setId(this.id);
-//
-//        if (this.user != null) {
-//            rating.setUser(this.user.toDomainObject());
-//        }
-//
-//        if (this.cat != null) {
-//            rating.setCat(this.cat.toDomainObject());
-//        }
-//
-//        rating.setLike(this.like);
-//        return rating;
-//    }
 }

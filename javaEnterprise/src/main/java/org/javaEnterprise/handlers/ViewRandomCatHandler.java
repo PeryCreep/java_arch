@@ -18,6 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -100,7 +101,7 @@ public class ViewRandomCatHandler implements StateHandler {
             bot.sendPhoto(sendPhoto);
 
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.err.println(Arrays.toString(e.getStackTrace()));
             bot.sendMessage(SendMessage.builder()
                     .chatId(chatId)
                     .text(MessageBundle.getMessage("error.cat.send"))
@@ -112,15 +113,15 @@ public class ViewRandomCatHandler implements StateHandler {
         return InlineKeyboardMarkup.builder()
                 .keyboard(List.of(
                         List.of(
-                                createRatingButton(ActionPrefixConstants.LIKE.name(), MessageBundle.getMessage("view.random.cat.like"), cat.getLikesCount(), cat.getId()),
-                                createRatingButton(ActionPrefixConstants.DISLIKE.name(), MessageBundle.getMessage("view.random.cat.dislike"), cat.getDislikesCount(), cat.getId())
+                                createRatingButton(ActionPrefixConstants.LIKE.name(), MessageBundle.getMessage("view.random.cat.like"), catService.getLikeCount(cat), cat.getId()),
+                                createRatingButton(ActionPrefixConstants.DISLIKE.name(), MessageBundle.getMessage("view.random.cat.dislike"), catService.getDislikeCount(cat), cat.getId())
                         ),
                         List.of(createBackButton())
                 ))
                 .build();
     }
 
-    private InlineKeyboardButton createRatingButton(String type, String emoji, int count, Long catId) {
+    private InlineKeyboardButton createRatingButton(String type, String emoji, long count, Long catId) {
         return InlineKeyboardButton.builder()
                 .text("%s (%d)".formatted(emoji, count))
                 .callbackData("%s_%d".formatted(type, catId))

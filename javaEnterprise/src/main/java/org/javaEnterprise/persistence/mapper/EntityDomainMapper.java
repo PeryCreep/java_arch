@@ -54,8 +54,6 @@ public class EntityDomainMapper {
         
         entity.setName(domain.getName());
         entity.setPhotoData(domain.getPhotoData());
-        entity.setLikesCount(domain.getLikesCount());
-        entity.setDislikesCount(domain.getDislikesCount());
 
         if (domain.getCreatedAt() != null) {
             entity.setCreatedAt(domain.getCreatedAt());
@@ -85,8 +83,6 @@ public class EntityDomainMapper {
             entity.getName(),
             entity.getPhotoData(),
             author,
-            entity.getLikesCount(),
-            entity.getDislikesCount(),
             entity.getCreatedAt()
         );
     }

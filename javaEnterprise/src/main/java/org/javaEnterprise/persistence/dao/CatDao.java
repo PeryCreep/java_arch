@@ -66,8 +66,6 @@ public class CatDao implements CatRepository {
             CatEntity entity;
             if (isUpdate && existingEntity != null) {
                 existingEntity.setName(cat.getName());
-                existingEntity.setLikesCount(cat.getLikesCount());
-                existingEntity.setDislikesCount(cat.getDislikesCount());
 
                 if (author != null) {
                     UserEntity authorEntity = entityManager.getReference(UserEntity.class, author.getId());
