@@ -1,20 +1,12 @@
 package org.javaEnterprise.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.OneToMany;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class User {
     private Long id;
     private Long chatId;
     private String name;
     private LocalDateTime createdAt;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CatRating> ratings = new ArrayList<>();
 
     public User() {
     }
@@ -48,14 +40,6 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
-    }
-    
-    public List<CatRating> getRatings() {
-        return ratings;
-    }
-    
-    public void setRatings(List<CatRating> ratings) {
-        this.ratings = ratings;
     }
 
     public LocalDateTime getCreatedAt() {
