@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -94,5 +95,19 @@ public class CatService {
         
         catRepository.save(cat);
         return true;
+    }
+
+    public long getLikeCount(Cat cat) {
+        List<CatRating> existingRating = catRatingRepository.listByCat(cat);
+        return existingRating.stream()
+                .filter(CatRating::isLike)
+                .count();
+    }
+
+    public long getDislikeCount(Cat cat) {
+        List<CatRating> existingRating = catRatingRepository.listByCat(cat);
+        return existingRating.stream()
+                .filter(r -> !r.isLike())
+                .count();
     }
 } 
