@@ -146,21 +146,13 @@ public class CatRatingDao implements CatRatingRepository {
 
     @Override
     @Transactional
-    public void deleteAll(List<CatRating> ratings) {
+    public void deleteAll(Long catId) {
         try {
-            if (ratings == null || ratings.isEmpty()) {
-                return;
-            }
-
-            Cat cat = ratings.get(0).getCat();
-            if (cat == null || cat.getId() == null) {
-                throw new IllegalArgumentException("Cannot delete ratings: invalid cat reference");
-            }
 
             entityManager.createQuery(
                 "DELETE FROM CatRatingEntity r WHERE r.cat.id = :catId"
             )
-            .setParameter("catId", cat.getId())
+            .setParameter("catId", catId)
             .executeUpdate();
             
         } catch (Exception e) {
