@@ -7,8 +7,6 @@ public class CatRating {
     private Cat cat;
     private boolean like;
 
-    public CatRating() {
-    }
 
     public CatRating(User user, Cat cat, boolean like) {
         this.user = user;

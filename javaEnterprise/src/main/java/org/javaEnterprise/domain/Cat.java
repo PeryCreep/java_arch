@@ -11,13 +11,10 @@ public class Cat {
     private User author;
     private LocalDateTime createdAt;
 
-    private List<CatRating> ratings = new ArrayList<>();
-
     public Cat() {
     }
 
-    public Cat(Long id, String name, byte[] photoData, User author, Integer likesCount, 
-               Integer dislikesCount, LocalDateTime createdAt) {
+    public Cat(Long id, String name, byte[] photoData, User author, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.photoData = photoData;
@@ -57,9 +54,6 @@ public class Cat {
         this.author = author;
     }
 
-    public List<CatRating> getRatings() {
-        return ratings;
-    }
 
 
     public LocalDateTime getCreatedAt() {

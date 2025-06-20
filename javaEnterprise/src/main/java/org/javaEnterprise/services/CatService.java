@@ -65,7 +65,7 @@ public class CatService {
             throw new SecurityException("Нет прав на удаление этого кота");
         }
 
-        catRatingRepository.deleteAll(cat.getRatings());
+        catRatingRepository.deleteAll(cat.getId());
 
         catRepository.deleteById(cat.getId());
     }

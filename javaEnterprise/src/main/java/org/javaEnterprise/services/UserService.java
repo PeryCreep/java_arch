@@ -52,18 +52,6 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public boolean isUserExists(Long chatId) {
-        try {
-            return userRepository.existsByChatId(chatId);
-        } catch (StackOverflowError e) {
-            try {
-                return findByChatId(chatId).isPresent();
-            } catch (Exception ex) {
-                System.err.println(ex.getMessage());
-                return false;
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return false;
-        }
+        return userRepository.existsByChatId(chatId);
     }
 } 

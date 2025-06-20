@@ -15,5 +15,5 @@ public interface CatRatingRepository {
 
     CatRating save(CatRating rating);
 
-    void deleteAll(List<CatRating> ratings);
+    void deleteAll(Long catId);
 }
