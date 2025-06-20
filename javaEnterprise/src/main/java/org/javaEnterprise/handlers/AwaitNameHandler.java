@@ -1,10 +1,10 @@
 package org.javaEnterprise.handlers;
 
 import org.javaEnterprise.handlers.states.StateHandler;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.handlers.states.UserState;
 import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.UserService;
-import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -24,7 +24,7 @@ public class AwaitNameHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    public void handle(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 

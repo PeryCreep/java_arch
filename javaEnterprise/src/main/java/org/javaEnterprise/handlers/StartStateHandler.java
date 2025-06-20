@@ -1,7 +1,7 @@
 package org.javaEnterprise.handlers;
 
-import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.handlers.states.StateHandler;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.handlers.states.UserState;
 import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.UserService;
@@ -22,7 +22,7 @@ public class StartStateHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    public void handle(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 

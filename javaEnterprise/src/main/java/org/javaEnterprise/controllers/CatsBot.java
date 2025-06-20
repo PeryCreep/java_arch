@@ -1,6 +1,7 @@
 package org.javaEnterprise.controllers;
 
 import org.javaEnterprise.handlers.HandlerProvider;
+import org.javaEnterprise.handlers.TelegramMessageSender;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.UserState;
 import org.javaEnterprise.services.UserDataFacade;
@@ -23,7 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 @Component
-public class CatsBot extends TelegramLongPollingBot {
+public class CatsBot extends TelegramLongPollingBot implements TelegramMessageWorker {
 
     private final HandlerProvider handlerProvider;
     private final UserDataFacade userDataFacade;

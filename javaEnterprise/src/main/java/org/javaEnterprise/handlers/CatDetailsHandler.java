@@ -1,15 +1,14 @@
 package org.javaEnterprise.handlers;
 
-import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.handlers.states.StateHandler;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.CatService;
 import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.enums.CallbackData;
 import org.javaEnterprise.util.ErrorHandler;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -28,7 +27,7 @@ public class CatDetailsHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    public void handle(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
@@ -50,7 +49,7 @@ public class CatDetailsHandler implements StateHandler {
         }
     }
 
-    private void sendCatDetails(Cat cat, Long chatId, CatsBot bot) {
+    private void sendCatDetails(Cat cat, Long chatId, ITelegramMessageWorker bot) {
         try {
             SendPhoto sendPhoto = SendPhoto.builder()
                     .chatId(chatId.toString())

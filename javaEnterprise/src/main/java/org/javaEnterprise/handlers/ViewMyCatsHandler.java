@@ -1,10 +1,9 @@
 package org.javaEnterprise.handlers;
 
-import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.domain.User;
 import org.javaEnterprise.handlers.states.StateHandler;
-import org.javaEnterprise.handlers.states.UserState;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.CatService;
 import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.UserService;
@@ -36,7 +35,7 @@ public class ViewMyCatsHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    public void handle(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
@@ -62,7 +61,7 @@ public class ViewMyCatsHandler implements StateHandler {
         }
     }
 
-    private void handleDeleteCat(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    private void handleDeleteCat(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         Long catId = Long.parseLong(update.getCallbackQuery().getData().split("_")[2]);
         
@@ -89,7 +88,7 @@ public class ViewMyCatsHandler implements StateHandler {
         }
     }
 
-    private void editMessageAfterDelete(Update update, CatsBot bot) {
+    private void editMessageAfterDelete(Update update, ITelegramMessageWorker bot) {
         EditMessageText editMessage = EditMessageText.builder()
                 .chatId(update.getCallbackQuery().getMessage().getChatId())
                 .messageId(update.getCallbackQuery().getMessage().getMessageId())
@@ -104,7 +103,7 @@ public class ViewMyCatsHandler implements StateHandler {
         return page != null ? page : 0;
     }
 
-    private void sendCatsPage(Long chatId, Page<Cat> catPage, CatsBot bot, UserDataFacade userDataFacade) {
+    private void sendCatsPage(Long chatId, Page<Cat> catPage, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         userDataFacade.storePage(chatId, catPage.getNumber());
         String caption = String.format(MessageBundle.getMessage("view.my.cats.page"),
                 catPage.getNumber() + 1,
@@ -167,7 +166,7 @@ public class ViewMyCatsHandler implements StateHandler {
         return buttons;
     }
 
-    private void sendEmptyMessage(Long chatId, CatsBot bot) {
+    private void sendEmptyMessage(Long chatId, ITelegramMessageWorker bot) {
         bot.sendMessage(SendMessage.builder()
                 .chatId(chatId)
                 .text(MessageBundle.getMessage("view.my.cats.empty"))

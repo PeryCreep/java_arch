@@ -1,19 +1,19 @@
 package org.javaEnterprise.util;
 
-import org.javaEnterprise.controllers.CatsBot;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 
 public class ErrorHandler {
 
 
-    public static void handleError(Long chatId, CatsBot bot, Exception exception) {
+    public static void handleError(Long chatId, ITelegramMessageWorker bot, Exception exception) {
         String errorMessage = formatErrorMessage(exception);
         sendErrorMessage(chatId, bot, errorMessage);
         logError(exception);
     }
 
-    public static void handleError(Long chatId, CatsBot bot, String errorMessage) {
+    public static void handleError(Long chatId, ITelegramMessageWorker bot, String errorMessage) {
         sendErrorMessage(chatId, bot, errorMessage);
     }
 
@@ -28,7 +28,7 @@ public class ErrorHandler {
     }
 
 
-    private static void sendErrorMessage(Long chatId, CatsBot bot, String errorMessage) {
+    private static void sendErrorMessage(Long chatId, ITelegramMessageWorker bot, String errorMessage) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(errorMessage);

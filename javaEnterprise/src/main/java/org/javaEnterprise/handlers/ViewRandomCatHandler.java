@@ -1,8 +1,8 @@
 package org.javaEnterprise.handlers;
 
-import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.handlers.states.StateHandler;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.CatService;
 import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.enums.CallbackData;
@@ -31,7 +31,7 @@ public class ViewRandomCatHandler implements StateHandler {
     }
 
     @Override
-    public void handle(Update update, CatsBot bot, UserDataFacade userDataFacade) {
+    public void handle(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
@@ -57,7 +57,7 @@ public class ViewRandomCatHandler implements StateHandler {
         sendCatWithButtons(cat, chatId, bot);
     }
 
-    private void handleRatingCallback(Update update, CatsBot bot, Boolean isLike, Long catId) {
+    private void handleRatingCallback(Update update, ITelegramMessageWorker bot, Boolean isLike, Long catId) {
         Long chatId = bot.getChatId(update);
 
         try {
@@ -84,7 +84,7 @@ public class ViewRandomCatHandler implements StateHandler {
         }
     }
 
-    private void sendCatWithButtons(Cat cat, Long chatId, CatsBot bot) {
+    private void sendCatWithButtons(Cat cat, Long chatId, ITelegramMessageWorker bot) {
         try {
             SendPhoto sendPhoto = SendPhoto.builder()
                     .chatId(chatId.toString())
