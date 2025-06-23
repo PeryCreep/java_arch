@@ -3,10 +3,9 @@ package org.catService.persistence.dao;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.Query;
-import org.catService.domain.Cat;
-import org.catService.domain.User;
-import org.catService.domain.repository.CatRepository;
+import org.common.domain.Cat;
+import org.common.domain.User;
+import org.common.domain.repository.CatRepository;
 import org.catService.persistence.entity.CatEntity;
 import org.catService.persistence.entity.UserEntity;
 import org.catService.persistence.mapper.EntityDomainMapper;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -94,23 +92,6 @@ public class CatDao implements CatRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Cat> findAll() {
-        try {
-            List<CatEntity> entities = entityManager
-                    .createQuery("SELECT c FROM CatEntity c", CatEntity.class)
-                    .getResultList();
-            
-            return entities.stream()
-                    .map(mapper::catToDomain)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            System.err.println("Error finding all cats: " + e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Optional<Cat> findById(Long id) {
         try {
             CatEntity entity = entityManager.find(CatEntity.class, id);
@@ -151,7 +132,7 @@ public class CatDao implements CatRepository {
             query.setParameter("authorId", authorId);
             query.setFirstResult((int) pageable.getOffset());
             query.setMaxResults(pageable.getPageSize());
-            
+
             List<CatEntity> results = query.getResultList();
 
             TypedQuery<Long> countQuery = entityManager.createQuery(
@@ -163,27 +144,11 @@ public class CatDao implements CatRepository {
             List<Cat> cats = results.stream()
                     .map(mapper::catToDomain)
                     .collect(Collectors.toList());
-            
+
             return new PageImpl<>(cats, pageable, total);
         } catch (Exception e) {
             System.err.println("Error finding cats by author: " + e.getMessage());
             return Page.empty();
-        }
-    }
-
-    @Override
-    @Transactional
-    public int deleteByIdAndAuthorId(Long catId, Long authorId) {
-        try {
-            Query query = entityManager.createQuery(
-                    "DELETE FROM CatEntity c WHERE c.id = :catId AND c.author.id = :authorId");
-            query.setParameter("catId", catId);
-            query.setParameter("authorId", authorId);
-            
-            return query.executeUpdate();
-        } catch (Exception e) {
-            System.err.println("Error deleting cat: " + e.getMessage());
-            return 0;
         }
     }
 

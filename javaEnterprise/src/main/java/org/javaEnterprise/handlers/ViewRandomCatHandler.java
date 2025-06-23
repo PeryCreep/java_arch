@@ -1,6 +1,7 @@
 package org.javaEnterprise.handlers;
 
-import org.javaEnterprise.domain.Cat;
+import org.common.domain.Cat;
+import org.common.kafka.payloads.GetRandomCatResponsePayload;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.UserDataFacade;
@@ -10,13 +11,14 @@ import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.javaEnterprise.kafka.CatKafkaService;
-import org.javaEnterprise.kafka.dto.CatRequestMessage;
-import org.javaEnterprise.kafka.dto.CatResponseMessage;
+import org.common.kafka.dto.CatRequestMessage;
+import org.common.kafka.dto.CatResponseMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +26,10 @@ import java.util.concurrent.TimeUnit;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
+import org.common.kafka.dto.CatOperationType;
+import org.common.kafka.payloads.GetRandomCatPayload;
+import org.common.kafka.payloads.RateCatPayload;
+import org.common.kafka.payloads.SingleCatResponsePayload;
 
 @Component
 public class ViewRandomCatHandler implements StateHandler {
@@ -52,23 +58,17 @@ public class ViewRandomCatHandler implements StateHandler {
         }
 
         CatRequestMessage request = new CatRequestMessage(
-            "GET_RANDOM_CAT",
-            null,
+            CatOperationType.GET_RANDOM_CAT,
+            new GetRandomCatPayload(),
             System.currentTimeMillis(),
             chatId
         );
         try {
             CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(response.getStatus()) && response.getPayload() != null && response.getPayload().get("cat") != null) {
-                Cat cat = objectMapper.convertValue(response.getPayload().get("cat"), Cat.class);
-                long likeCount = 0;
-                long dislikeCount = 0;
-                if (response.getPayload().get("likeCount") != null) {
-                    likeCount = ((Number) response.getPayload().get("likeCount")).longValue();
-                }
-                if (response.getPayload().get("dislikeCount") != null) {
-                    dislikeCount = ((Number) response.getPayload().get("dislikeCount")).longValue();
-                }
+            if ("OK".equals(response.getStatus()) && response.getPayload() instanceof GetRandomCatResponsePayload payload) {
+                Cat cat = payload.getCat();
+                long likeCount = payload.getLikeCount() != null ? payload.getLikeCount() : 0;
+                long dislikeCount = payload.getDislikeCount() != null ? payload.getDislikeCount() : 0;
                 sendCatWithButtons(cat, chatId, bot, likeCount, dislikeCount);
             } else {
                 bot.sendMessage(SendMessage.builder().chatId(chatId)
@@ -85,43 +85,35 @@ public class ViewRandomCatHandler implements StateHandler {
     private void handleRatingCallback(Update update, ITelegramMessageWorker bot, Boolean isLike, Long catId) {
         Long chatId = bot.getChatId(update);
         try {
-            org.javaEnterprise.kafka.dto.CatRequestMessage request = new org.javaEnterprise.kafka.dto.CatRequestMessage(
-                "RATE_CAT",
-                java.util.Map.of("catId", catId, "userId", chatId, "isLike", isLike),
+            CatRequestMessage request = new CatRequestMessage(
+                CatOperationType.RATE_CAT,
+                new RateCatPayload(catId, chatId, isLike),
                 System.currentTimeMillis(),
                 chatId
             );
-            org.javaEnterprise.kafka.dto.CatResponseMessage response = catKafkaService.sendRequest(request).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            CatResponseMessage response = catKafkaService.sendRequest(request).get(5, java.util.concurrent.TimeUnit.SECONDS);
             if (!"OK".equals(response.getStatus())) {
                 ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.rate"));
                 return;
             }
-            org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage deleteMsg = org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage.builder()
+            DeleteMessage deleteMsg = DeleteMessage.builder()
                     .chatId(chatId.toString())
                     .messageId(update.getCallbackQuery().getMessage().getMessageId())
                     .build();
             bot.deleteMessage(deleteMsg);
-            // После лайка/дизлайка — показать нового случайного кота через Kafka
             CatRequestMessage randomRequest = new CatRequestMessage(
-                "GET_RANDOM_CAT",
-                null,
+                CatOperationType.GET_RANDOM_CAT,
+                new GetRandomCatPayload(),
                 System.currentTimeMillis(),
                 chatId
             );
             CatResponseMessage randomResponse = catKafkaService.sendRequest(randomRequest).get(5, java.util.concurrent.TimeUnit.SECONDS);
-            if ("OK".equals(randomResponse.getStatus()) && randomResponse.getPayload() != null && randomResponse.getPayload().get("cat") != null) {
-                Cat cat = objectMapper.convertValue(randomResponse.getPayload().get("cat"), Cat.class);
-                long likeCount = 0;
-                long dislikeCount = 0;
-                if (randomResponse.getPayload().get("likeCount") != null) {
-                    likeCount = ((Number) randomResponse.getPayload().get("likeCount")).longValue();
-                }
-                if (randomResponse.getPayload().get("dislikeCount") != null) {
-                    dislikeCount = ((Number) randomResponse.getPayload().get("dislikeCount")).longValue();
-                }
-                sendCatWithButtons(cat, chatId, bot, likeCount, dislikeCount);
+            if ("OK".equals(randomResponse.getStatus()) && randomResponse.getPayload() instanceof GetRandomCatResponsePayload payload) {
+                long likeCount = payload.getLikeCount() != null ? payload.getLikeCount() : 0;
+                long dislikeCount = payload.getDislikeCount() != null ? payload.getDislikeCount() : 0;
+                sendCatWithButtons(payload.getCat(), chatId, bot, likeCount, dislikeCount);
             } else {
-                bot.sendMessage(org.telegram.telegrambots.meta.api.methods.send.SendMessage.builder().chatId(chatId)
+                bot.sendMessage(SendMessage.builder().chatId(chatId)
                         .text(MessageBundle.getMessage("error.no.cats"))
                         .build());
             }

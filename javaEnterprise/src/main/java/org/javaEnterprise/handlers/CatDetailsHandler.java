@@ -1,6 +1,6 @@
 package org.javaEnterprise.handlers;
 
-import org.javaEnterprise.domain.Cat;
+import org.common.domain.Cat;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.UserDataFacade;
@@ -14,15 +14,17 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.javaEnterprise.kafka.CatKafkaService;
-import org.javaEnterprise.kafka.dto.CatRequestMessage;
-import org.javaEnterprise.kafka.dto.CatResponseMessage;
+import org.common.kafka.dto.CatRequestMessage;
+import org.common.kafka.dto.CatResponseMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.TimeUnit;
-import java.util.Map;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.common.kafka.dto.CatOperationType;
+import org.common.kafka.payloads.GetCatByIdPayload;
+import org.common.kafka.payloads.SingleCatResponsePayload;
 
 @Component
 public class CatDetailsHandler implements StateHandler {
@@ -48,14 +50,14 @@ public class CatDetailsHandler implements StateHandler {
         try {
             Long catId = Long.parseLong(callbackData.split("_")[2]);
             CatRequestMessage request = new CatRequestMessage(
-                "GET_CAT_DETAILS",
-                Map.of("catId", catId),
+                CatOperationType.GET_CAT_BY_ID,
+                new GetCatByIdPayload(catId),
                 System.currentTimeMillis(),
                 chatId
             );
             CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(response.getStatus()) && response.getPayload() != null && response.getPayload().get("cat") != null) {
-                Cat cat = objectMapper.convertValue(response.getPayload().get("cat"), Cat.class);
+            if ("OK".equals(response.getStatus()) && response.getPayload() instanceof SingleCatResponsePayload payload && payload.getCat() != null) {
+                Cat cat = payload.getCat();
                 sendCatDetails(cat, chatId, bot);
             } else {
                 ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.not_found"));

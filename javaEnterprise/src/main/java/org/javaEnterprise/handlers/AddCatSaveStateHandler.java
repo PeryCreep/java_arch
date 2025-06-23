@@ -1,5 +1,7 @@
 package org.javaEnterprise.handlers;
 
+import org.common.kafka.dto.CatOperationType;
+import org.common.kafka.payloads.CreateCatPayload;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.handlers.states.UserState;
@@ -13,10 +15,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.javaEnterprise.kafka.CatKafkaService;
-import org.javaEnterprise.kafka.dto.CatRequestMessage;
-import org.javaEnterprise.kafka.dto.CatResponseMessage;
+import org.common.kafka.dto.CatRequestMessage;
+import org.common.kafka.dto.CatResponseMessage;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -37,10 +38,10 @@ public class AddCatSaveStateHandler implements StateHandler {
 
         try {
             CatRequestMessage request = new CatRequestMessage(
-                "ADD_CAT",
-                Map.of("chatId", chatId, "name", catName, "photoData", photoData),
-                System.currentTimeMillis(),
-                chatId
+                    CatOperationType.CREATE_CAT,
+                    new CreateCatPayload(chatId, catName, photoData),
+                    System.currentTimeMillis(),
+                    chatId
             );
             CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
             if ("OK".equals(response.getStatus())) {

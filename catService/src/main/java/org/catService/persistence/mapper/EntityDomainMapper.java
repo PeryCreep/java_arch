@@ -1,8 +1,8 @@
 package org.catService.persistence.mapper;
 
-import org.catService.domain.Cat;
-import org.catService.domain.CatRating;
-import org.catService.domain.User;
+import org.common.domain.Cat;
+import org.common.domain.CatRating;
+import org.common.domain.User;
 
 import org.catService.persistence.entity.CatEntity;
 import org.catService.persistence.entity.CatRatingEntity;

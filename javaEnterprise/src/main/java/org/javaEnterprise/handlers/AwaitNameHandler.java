@@ -1,5 +1,10 @@
 package org.javaEnterprise.handlers;
 
+import org.common.kafka.dto.CatRequestMessage;
+import org.common.kafka.dto.CatOperationType;
+import org.common.kafka.dto.CatResponseMessage;
+import org.common.kafka.payloads.CreateUserPayload;
+import org.common.kafka.payloads.UserResponsePayload;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.handlers.states.UserState;
@@ -9,8 +14,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.javaEnterprise.kafka.CatKafkaService;
-import org.javaEnterprise.kafka.dto.CatRequestMessage;
-import java.util.Map;
+
 import java.util.concurrent.TimeUnit;
 
 
@@ -42,8 +46,21 @@ public class AwaitNameHandler implements StateHandler {
 
         String name = update.getMessage().getText();
         try {
-            CatRequestMessage req = new CatRequestMessage("CREATE_USER", Map.of("chatId", chatId, "name", name), System.currentTimeMillis(), chatId);
-            catKafkaService.sendRequest(req).get(5, TimeUnit.SECONDS);
+            CatRequestMessage req = new CatRequestMessage(
+                CatOperationType.CREATE_USER,
+                new CreateUserPayload(chatId, name),
+                System.currentTimeMillis(),
+                chatId
+            );
+            CatResponseMessage resp = catKafkaService.sendRequest(req).get(5, TimeUnit.SECONDS);
+            if ("OK".equals(resp.getStatus()) && resp.getPayload() instanceof UserResponsePayload payload && payload.getUser() != null) {
+                // ... (обработка успешного создания пользователя)
+            } else {
+                bot.sendMessage(SendMessage.builder()
+                        .chatId(chatId)
+                        .text("Ошибка при сохранении пользователя")
+                        .build());
+            }
         } catch (Exception e) {
             bot.sendMessage(SendMessage.builder()
                     .chatId(chatId)

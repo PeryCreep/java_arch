@@ -10,9 +10,12 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.javaEnterprise.kafka.CatKafkaService;
-import org.javaEnterprise.kafka.dto.CatRequestMessage;
-import org.javaEnterprise.kafka.dto.CatResponseMessage;
-import java.util.Map;
+import org.common.kafka.dto.CatRequestMessage;
+import org.common.kafka.dto.CatResponseMessage;
+import org.common.kafka.dto.CatOperationType;
+import org.common.kafka.payloads.IsUserExistsPayload;
+import org.common.kafka.payloads.UserExistsResponsePayload;
+
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -33,14 +36,21 @@ public class StartStateHandler implements StateHandler {
         if (chatId == null) return;
 
         try {
-            CatRequestMessage req = new CatRequestMessage("IS_USER_EXISTS", Map.of("chatId", chatId), System.currentTimeMillis(), chatId);
+            CatRequestMessage req = new CatRequestMessage(
+                CatOperationType.IS_USER_EXISTS,
+                new IsUserExistsPayload(chatId),
+                System.currentTimeMillis(),
+                chatId
+            );
             CatResponseMessage resp = catKafkaService.sendRequest(req).get(5, TimeUnit.SECONDS);
-            boolean exists = resp.getPayload() != null && Boolean.TRUE.equals(resp.getPayload().get("exists"));
-            if (exists) {
-                userDataFacade.setState(chatId, UserState.MAIN_MENU);
-                StateHandler mainMenuHandler = nextHandler();
-                mainMenuHandler.handle(update, bot, userDataFacade);
-                return;
+            if ("OK".equals(resp.getStatus()) && resp.getPayload() instanceof UserExistsResponsePayload payload) {
+                boolean exists = payload.isExists();
+                if (exists) {
+                    userDataFacade.setState(chatId, UserState.MAIN_MENU);
+                    StateHandler mainMenuHandler = nextHandler();
+                    mainMenuHandler.handle(update, bot, userDataFacade);
+                    return;
+                }
             }
         } catch (Exception e) {
             bot.sendMessage(new SendMessage(chatId.toString(), "Ошибка при проверке пользователя"));

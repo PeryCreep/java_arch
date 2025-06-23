@@ -4,8 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import org.catService.domain.User;
-import org.catService.domain.repository.UserRepository;
+import org.common.domain.User;
+import org.common.domain.repository.UserRepository;
 import org.catService.persistence.entity.UserEntity;
 import org.catService.persistence.mapper.EntityDomainMapper;
 import org.springframework.stereotype.Repository;
@@ -45,23 +45,6 @@ public class UserDao implements UserRepository {
         } catch (Exception e) {
             System.err.println("Error saving user: " + e.getMessage());
             throw new RuntimeException("Failed to save user", e);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<User> findAll() {
-        try {
-            List<UserEntity> entities = entityManager
-                    .createQuery("SELECT u FROM UserEntity u", UserEntity.class)
-                    .getResultList();
-            
-            return entities.stream()
-                    .map(mapper::userToDomain)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            System.err.println("Error finding all users: " + e.getMessage());
-            return List.of();
         }
     }
 
@@ -108,20 +91,6 @@ public class UserDao implements UserRepository {
         } catch (Exception e) {
             System.err.println("Error checking if user exists: " + e.getMessage());
             return false;
-        }
-    }
-
-    @Override
-    @Transactional
-    public void deleteById(Long id) {
-        try {
-            UserEntity entity = entityManager.find(UserEntity.class, id);
-            if (entity != null) {
-                entityManager.remove(entity);
-            }
-        } catch (Exception e) {
-            System.err.println("Error deleting user: " + e.getMessage());
-            throw new RuntimeException("Failed to delete user", e);
         }
     }
 } 

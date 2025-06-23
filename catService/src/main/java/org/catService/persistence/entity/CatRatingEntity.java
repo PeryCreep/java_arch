@@ -2,7 +2,7 @@ package org.catService.persistence.entity;
 
 
 import jakarta.persistence.*;
-import org.catService.domain.CatRating;
+import org.common.domain.CatRating;
 import org.catService.persistence.entity.CatEntity;
 import org.catService.persistence.entity.UserEntity;
 
