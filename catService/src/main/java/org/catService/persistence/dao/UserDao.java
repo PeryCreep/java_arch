@@ -1,13 +1,13 @@
-package org.javaEnterprise.persistence.dao;
+package org.catService.persistence.dao;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import org.javaEnterprise.domain.User;
-import org.javaEnterprise.domain.repository.UserRepository;
-import org.javaEnterprise.persistence.entity.UserEntity;
-import org.javaEnterprise.persistence.mapper.EntityDomainMapper;
+import org.catService.domain.User;
+import org.catService.domain.repository.UserRepository;
+import org.catService.persistence.entity.UserEntity;
+import org.catService.persistence.mapper.EntityDomainMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 

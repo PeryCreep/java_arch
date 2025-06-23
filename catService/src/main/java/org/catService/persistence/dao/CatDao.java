@@ -1,15 +1,15 @@
-package org.javaEnterprise.persistence.dao;
+package org.catService.persistence.dao;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.Query;
-import org.javaEnterprise.domain.Cat;
-import org.javaEnterprise.domain.User;
-import org.javaEnterprise.domain.repository.CatRepository;
-import org.javaEnterprise.persistence.entity.CatEntity;
-import org.javaEnterprise.persistence.entity.UserEntity;
-import org.javaEnterprise.persistence.mapper.EntityDomainMapper;
+import org.catService.domain.Cat;
+import org.catService.domain.User;
+import org.catService.domain.repository.CatRepository;
+import org.catService.persistence.entity.CatEntity;
+import org.catService.persistence.entity.UserEntity;
+import org.catService.persistence.mapper.EntityDomainMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

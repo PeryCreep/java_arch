@@ -1,10 +1,10 @@
-package org.javaEnterprise.services;
+package org.catService.services;
 
-import org.javaEnterprise.domain.Cat;
-import org.javaEnterprise.domain.CatRating;
-import org.javaEnterprise.domain.User;
-import org.javaEnterprise.domain.repository.CatRatingRepository;
-import org.javaEnterprise.domain.repository.CatRepository;
+import org.catService.domain.Cat;
+import org.catService.domain.CatRating;
+import org.catService.domain.User;
+import org.catService.domain.repository.CatRatingRepository;
+import org.catService.domain.repository.CatRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -31,9 +31,9 @@ public class CatService {
     }
 
     @Transactional
-    public Cat addCat(Long authorId, String name, byte[] photoData) {
-        User author = userService.findByChatId(authorId)
-                .orElseGet(() -> userService.createUser(authorId, "User" + authorId));
+    public Cat addCat(Long chatId, String name, byte[] photoData) {
+        User author = userService.findByChatId(chatId)
+                .orElseThrow(() ->  new IllegalStateException("Пользователя не существует"));
         
         if (author.getId() == null) {
             author = userService.save(author);
@@ -58,11 +58,11 @@ public class CatService {
     }
 
     @Transactional
-    public void deleteCat(Long catId, Long authorId) {
+    public void deleteCat(Long catId, Long chatId) {
         Cat cat = catRepository.findById(catId)
                 .orElseThrow(() -> new IllegalStateException("Кот не найден"));
 
-        if (!cat.getAuthor().getId().equals(authorId)) {
+        if (!cat.getAuthor().getChatId().equals(chatId)) {
             throw new SecurityException("Нет прав на удаление этого кота");
         }
 
@@ -109,5 +109,9 @@ public class CatService {
         return existingRating.stream()
                 .filter(r -> !r.isLike())
                 .count();
+    }
+
+    public UserService getUserService() {
+        return userService;
     }
 } 

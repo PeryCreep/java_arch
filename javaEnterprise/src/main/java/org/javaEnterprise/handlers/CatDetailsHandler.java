@@ -3,7 +3,6 @@ package org.javaEnterprise.handlers;
 import org.javaEnterprise.domain.Cat;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
-import org.javaEnterprise.services.CatService;
 import org.javaEnterprise.services.UserDataFacade;
 import org.javaEnterprise.services.enums.CallbackData;
 import org.javaEnterprise.util.ErrorHandler;
@@ -14,16 +13,24 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.javaEnterprise.kafka.CatKafkaService;
+import org.javaEnterprise.kafka.dto.CatRequestMessage;
+import org.javaEnterprise.kafka.dto.CatResponseMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Component
 public class CatDetailsHandler implements StateHandler {
-    private final CatService catService;
+    private final CatKafkaService catKafkaService;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    public CatDetailsHandler(CatService catService) {
-        this.catService = catService;
+    public CatDetailsHandler(CatKafkaService catKafkaService) {
+        this.catKafkaService = catKafkaService;
     }
 
     @Override
@@ -40,12 +47,21 @@ public class CatDetailsHandler implements StateHandler {
 
         try {
             Long catId = Long.parseLong(callbackData.split("_")[2]);
-            catService.getCatById(catId).ifPresentOrElse(
-                    cat -> sendCatDetails(cat, chatId, bot),
-                    () -> ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.not_found"))
+            CatRequestMessage request = new CatRequestMessage(
+                "GET_CAT_DETAILS",
+                Map.of("catId", catId),
+                System.currentTimeMillis(),
+                chatId
             );
-        } catch (NumberFormatException e) {
-            ErrorHandler.handleError(chatId, bot, "Ошибка формата ID котика");
+            CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
+            if ("OK".equals(response.getStatus()) && response.getPayload() != null && response.getPayload().get("cat") != null) {
+                Cat cat = objectMapper.convertValue(response.getPayload().get("cat"), Cat.class);
+                sendCatDetails(cat, chatId, bot);
+            } else {
+                ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.not_found"));
+            }
+        } catch (Exception e) {
+            ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("error.cat.not_found"));
         }
     }
 

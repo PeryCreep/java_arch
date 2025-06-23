@@ -1,10 +1,11 @@
-package org.javaEnterprise.services;
+package org.catService.services;
 
-import org.javaEnterprise.domain.User;
-import org.javaEnterprise.domain.repository.UserRepository;
+import org.catService.domain.User;
+import org.catService.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -17,9 +18,7 @@ public class UserService {
 
     @Transactional
     public User createUser(Long chatId, String name) {
-        User user = new User();
-        user.setChatId(chatId);
-        user.setName(name);
+        User user = new User(chatId, name, LocalDateTime.now());
         return userRepository.save(user);
     }
 

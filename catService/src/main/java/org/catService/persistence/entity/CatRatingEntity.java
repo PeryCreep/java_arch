@@ -1,10 +1,10 @@
-package org.javaEnterprise.persistence.entity;
+package org.catService.persistence.entity;
 
 
 import jakarta.persistence.*;
-import org.javaEnterprise.domain.CatRating;
-import org.javaEnterprise.persistence.entity.CatEntity;
-import org.javaEnterprise.persistence.entity.UserEntity;
+import org.catService.domain.CatRating;
+import org.catService.persistence.entity.CatEntity;
+import org.catService.persistence.entity.UserEntity;
 
 
 @Entity

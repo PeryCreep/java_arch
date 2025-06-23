@@ -1,37 +1,38 @@
 package org.javaEnterprise.handlers;
 
 import org.javaEnterprise.domain.Cat;
-import org.javaEnterprise.domain.User;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
-import org.javaEnterprise.services.CatService;
 import org.javaEnterprise.services.UserDataFacade;
-import org.javaEnterprise.services.UserService;
 import org.javaEnterprise.services.enums.CallbackData;
 import org.javaEnterprise.util.ErrorHandler;
 import org.javaEnterprise.util.MessageBundle;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.javaEnterprise.kafka.CatKafkaService;
+import org.javaEnterprise.kafka.dto.CatRequestMessage;
+import org.javaEnterprise.kafka.dto.CatResponseMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Component
 public class ViewMyCatsHandler implements StateHandler {
     private static final int PAGE_SIZE = 9;
-    private final CatService catService;
-    private final UserService userService;
+    private final CatKafkaService catKafkaService;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    public ViewMyCatsHandler(CatService catService,
-                             UserService userService) {
-        this.catService = catService;
-        this.userService = userService;
+    public ViewMyCatsHandler(CatKafkaService catKafkaService) {
+        this.catKafkaService = catKafkaService;
     }
 
     @Override
@@ -45,16 +46,33 @@ public class ViewMyCatsHandler implements StateHandler {
         }
 
         try {
-            User user = userService.findByChatId(chatId)
-                    .orElseThrow(() -> new NoSuchElementException("User not found"));
-
+            CatRequestMessage userReq = new CatRequestMessage("FIND_USER_BY_CHAT_ID", Map.of("chatId", chatId), System.currentTimeMillis(), chatId);
+            CatResponseMessage userResp = catKafkaService.sendRequest(userReq).get(5, TimeUnit.SECONDS);
+            org.javaEnterprise.domain.User user = null;
+            if (userResp.getPayload() != null && userResp.getPayload().get("user") != null) {
+                user = objectMapper.convertValue(userResp.getPayload().get("user"), org.javaEnterprise.domain.User.class);
+            }
+            if (user == null) {
+                bot.sendMessage(SendMessage.builder().chatId(chatId).text("Пользователь не найден").build());
+                return;
+            }
             int page = getCurrentPage(chatId, userDataFacade);
-            Page<Cat> catPage = catService.getCatsByAuthor(user.getId(), page, PAGE_SIZE);
-
-            if (catPage.isEmpty()) {
-                sendEmptyMessage(chatId, bot);
+            CatRequestMessage request = new CatRequestMessage(
+                "GET_MY_CATS",
+                Map.of("authorId", user.getId(), "page", page, "size", PAGE_SIZE),
+                System.currentTimeMillis(),
+                chatId
+            );
+            CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
+            if ("OK".equals(response.getStatus()) && response.getPayload() != null && response.getPayload().get("cats") != null) {
+                java.util.List<org.javaEnterprise.domain.Cat> cats = objectMapper.convertValue(response.getPayload().get("cats"), new TypeReference<java.util.List<org.javaEnterprise.domain.Cat>>() {});
+                if (cats.isEmpty()) {
+                    sendEmptyMessage(chatId, bot);
+                } else {
+                    sendCatsPage(chatId, cats, page, bot, userDataFacade);
+                }
             } else {
-                sendCatsPage(chatId, catPage, bot, userDataFacade);
+                sendEmptyMessage(chatId, bot);
             }
         } catch (Exception e) {
             ErrorHandler.handleError(chatId, bot, e);
@@ -64,23 +82,39 @@ public class ViewMyCatsHandler implements StateHandler {
     private void handleDeleteCat(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         Long catId = Long.parseLong(update.getCallbackQuery().getData().split("_")[2]);
-        
         try {
-            User user = userService.findByChatId(chatId).orElseThrow();
-            catService.deleteCat(catId, user.getId());
+            org.javaEnterprise.kafka.dto.CatRequestMessage request = new org.javaEnterprise.kafka.dto.CatRequestMessage(
+                "DELETE_CAT",
+                java.util.Map.of("catId", catId, "chatId", chatId),
+                System.currentTimeMillis(),
+                chatId
+            );
+            org.javaEnterprise.kafka.dto.CatResponseMessage response = catKafkaService.sendRequest(request).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            if (!"OK".equals(response.getStatus())) {
+                ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("view.cat.delete.error"));
+                return;
+            }
             editMessageAfterDelete(update, bot);
-            
             int page = getCurrentPage(chatId, userDataFacade);
-            Page<Cat> catPage = catService.getCatsByAuthor(user.getId(), page, PAGE_SIZE);
-            
-            if (catPage.isEmpty() && page > 0) {
+            CatRequestMessage listRequest = new CatRequestMessage(
+                "GET_MY_CATS",
+                java.util.Map.of("authorId", chatId, "page", page, "size", PAGE_SIZE),
+                System.currentTimeMillis(),
+                chatId
+            );
+            CatResponseMessage listResponse = catKafkaService.sendRequest(listRequest).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            java.util.List<Cat> cats = java.util.Collections.emptyList();
+            if ("OK".equals(listResponse.getStatus()) && listResponse.getPayload() != null && listResponse.getPayload().get("cats") != null) {
+                cats = objectMapper.convertValue(listResponse.getPayload().get("cats"), new com.fasterxml.jackson.core.type.TypeReference<java.util.List<Cat>>() {});
+            }
+            if (cats.isEmpty() && page > 0) {
                 userDataFacade.storePage(chatId, page - 1);
                 handle(update, bot, userDataFacade);
             } else {
-                if (catPage.isEmpty()) {
+                if (cats.isEmpty()) {
                     sendEmptyMessage(chatId, bot);
                 } else {
-                    sendCatsPage(chatId, catPage, bot, userDataFacade);
+                    sendCatsPage(chatId, cats, page, bot, userDataFacade);
                 }
             }
         } catch (Exception e) {
@@ -103,16 +137,12 @@ public class ViewMyCatsHandler implements StateHandler {
         return page != null ? page : 0;
     }
 
-    private void sendCatsPage(Long chatId, Page<Cat> catPage, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
-        userDataFacade.storePage(chatId, catPage.getNumber());
-        String caption = String.format(MessageBundle.getMessage("view.my.cats.page"),
-                catPage.getNumber() + 1,
-                catPage.getTotalPages());
-
+    private void sendCatsPage(Long chatId, java.util.List<Cat> cats, int page, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
+        userDataFacade.storePage(chatId, page);
+        String caption = String.format(MessageBundle.getMessage("view.my.cats.page"), page + 1, 1);
         InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
-                .keyboard(createKeyboard(catPage))
+                .keyboard(createKeyboard(cats))
                 .build();
-
         bot.sendMessage(SendMessage.builder()
                 .chatId(chatId)
                 .text(caption)
@@ -120,10 +150,9 @@ public class ViewMyCatsHandler implements StateHandler {
                 .build());
     }
 
-    private List<List<InlineKeyboardButton>> createKeyboard(Page<Cat> catPage) {
+    private List<List<InlineKeyboardButton>> createKeyboard(java.util.List<Cat> cats) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-
-        catPage.getContent().forEach(cat -> {
+        cats.forEach(cat -> {
             keyboard.add(List.of(
                     InlineKeyboardButton.builder()
                             .text(cat.getName())
@@ -131,39 +160,13 @@ public class ViewMyCatsHandler implements StateHandler {
                             .build()
             ));
         });
-
-        if (catPage.getTotalPages() > 1) {
-            keyboard.add(createPaginationButtons(catPage));
-        }
-
         keyboard.add(List.of(
                 InlineKeyboardButton.builder()
                         .text(MessageBundle.getMessage("button.back"))
                         .callbackData(CallbackData.MAIN_MENU.name())
                         .build()
         ));
-
         return keyboard;
-    }
-
-    private List<InlineKeyboardButton> createPaginationButtons(Page<Cat> catPage) {
-        List<InlineKeyboardButton> buttons = new ArrayList<>();
-
-        if (catPage.hasPrevious()) {
-            buttons.add(InlineKeyboardButton.builder()
-                    .text(MessageBundle.getMessage("view.my.cat.back"))
-                    .callbackData("MYCATS_PAGE_" + (catPage.getNumber() - 1))
-                    .build());
-        }
-
-        if (catPage.hasNext()) {
-            buttons.add(InlineKeyboardButton.builder()
-                    .text(MessageBundle.getMessage("view.my.cat.next"))
-                    .callbackData("MYCATS_PAGE_" + (catPage.getNumber() + 1))
-                    .build());
-        }
-
-        return buttons;
     }
 
     private void sendEmptyMessage(Long chatId, ITelegramMessageWorker bot) {

@@ -1,45 +1,31 @@
-package org.javaEnterprise.persistence.entity;
-
-import jakarta.persistence.*;
-import org.javaEnterprise.domain.CatRating;
+package org.catService.domain;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "cats")
-public class CatEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Cat {
     private Long id;
-
-    @Column(nullable = false)
     private String name;
-
-    @Lob
-    @Column(name = "photo_data", nullable = false)
     private byte[] photoData;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private UserEntity author;
-
-    @Column(name = "created_at", nullable = false)
+    private User author;
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "cat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CatRatingEntity> ratings = new ArrayList<>();
+    public Cat() {
+    }
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public Cat(Long id, String name, byte[] photoData, User author, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.photoData = photoData;
+        this.author = author;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -60,14 +46,16 @@ public class CatEntity {
         this.photoData = photoData;
     }
 
-    public UserEntity getAuthor() {
+    public User getAuthor() {
         return author;
     }
 
-    public void setAuthor(UserEntity author) {
+    public void setAuthor(User author) {
         this.author = author;
     }
-    
+
+
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -75,5 +63,4 @@ public class CatEntity {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
 }

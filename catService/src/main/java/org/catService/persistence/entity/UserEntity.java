@@ -1,4 +1,4 @@
-package org.javaEnterprise.persistence.entity;
+package org.catService.persistence.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
