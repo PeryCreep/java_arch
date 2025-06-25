@@ -1,4 +1,4 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
 import org.common.kafka.dto.CatRequestMessage;
 import org.common.kafka.dto.CatOperationType;
@@ -49,12 +49,12 @@ public class AwaitNameHandler implements StateHandler {
             CatRequestMessage req = new CatRequestMessage(
                 CatOperationType.CREATE_USER,
                 new CreateUserPayload(chatId, name),
-                System.currentTimeMillis(),
                 chatId
             );
             CatResponseMessage resp = catKafkaService.sendRequest(req).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(resp.getStatus()) && resp.getPayload() instanceof UserResponsePayload payload && payload.getUser() != null) {
-                // ... (обработка успешного создания пользователя)
+            if (resp.getPayload() instanceof UserResponsePayload payload && payload.getUser() != null) {
+                StateHandler nextHandler = nextHandler();
+                nextHandler.handle(update, bot, userDataFacade);
             } else {
                 bot.sendMessage(SendMessage.builder()
                         .chatId(chatId)
@@ -66,11 +66,7 @@ public class AwaitNameHandler implements StateHandler {
                     .chatId(chatId)
                     .text("Ошибка при сохранении пользователя")
                     .build());
-            return;
         }
-
-        StateHandler nextHandler = nextHandler();
-        nextHandler.handle(update, bot, userDataFacade);
     }
 
     @Override

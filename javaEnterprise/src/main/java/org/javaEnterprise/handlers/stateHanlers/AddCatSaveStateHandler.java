@@ -1,4 +1,4 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
 import org.common.kafka.dto.CatOperationType;
 import org.common.kafka.payloads.CreateCatPayload;
@@ -19,6 +19,7 @@ import org.common.kafka.dto.CatRequestMessage;
 import org.common.kafka.dto.CatResponseMessage;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.common.kafka.payloads.SuccessResponsePayload;
 
 @Component
 public class AddCatSaveStateHandler implements StateHandler {
@@ -40,11 +41,10 @@ public class AddCatSaveStateHandler implements StateHandler {
             CatRequestMessage request = new CatRequestMessage(
                     CatOperationType.CREATE_CAT,
                     new CreateCatPayload(chatId, catName, photoData),
-                    System.currentTimeMillis(),
                     chatId
             );
             CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(response.getStatus())) {
+            if (response.getPayload() instanceof SuccessResponsePayload) {
                 userDataFacade.clearFormData(chatId, UserTempDataKey.CAT_PHOTO_DATA.name());
                 userDataFacade.clearFormData(chatId, UserTempDataKey.CAT_NAME.name());
                 InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()

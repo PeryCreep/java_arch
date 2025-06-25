@@ -9,15 +9,13 @@ public class CatRequestMessage implements Serializable {
     private CatOperationType operation;
     private CatOperationPayload payload;
     private Long requestId;
-    private Long userId;
 
     public CatRequestMessage() {}
 
-    public CatRequestMessage(CatOperationType operation, CatOperationPayload payload, Long requestId, Long userId) {
+    public CatRequestMessage(CatOperationType operation, CatOperationPayload payload, Long requestId) {
         this.operation = operation;
         this.payload = payload;
         this.requestId = requestId;
-        this.userId = userId;
     }
 
     public CatOperationType getOperation() { return operation; }
@@ -26,6 +24,4 @@ public class CatRequestMessage implements Serializable {
     public void setPayload(CatOperationPayload payload) { this.payload = payload; }
     public Long getRequestId() { return requestId; }
     public void setRequestId(Long requestId) { this.requestId = requestId; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
 } 

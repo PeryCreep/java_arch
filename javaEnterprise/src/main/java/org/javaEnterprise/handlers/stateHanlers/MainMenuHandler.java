@@ -1,4 +1,4 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;

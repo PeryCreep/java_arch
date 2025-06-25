@@ -10,6 +10,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = CatListResponsePayload.class, name = "CAT_LIST"),
         @JsonSubTypes.Type(value = ErrorResponsePayload.class, name = "ERROR"),
         @JsonSubTypes.Type(value = SuccessResponsePayload.class, name = "SUCCESS"),
+        @JsonSubTypes.Type(value = SuccessRateResponsePayload.class, name = "SUCCESS_RATE"),
         @JsonSubTypes.Type(value = SingleCatResponsePayload.class, name = "SINGLE_CAT"),
         @JsonSubTypes.Type(value = UserResponsePayload.class, name = "USER"),
         @JsonSubTypes.Type(value = UserExistsResponsePayload.class, name = "USER_EXISTS"),

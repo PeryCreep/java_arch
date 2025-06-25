@@ -1,6 +1,7 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
 import org.common.domain.Cat;
+import org.javaEnterprise.handlers.ActionPrefixConstants;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.UserDataFacade;
@@ -52,11 +53,10 @@ public class CatDetailsHandler implements StateHandler {
             CatRequestMessage request = new CatRequestMessage(
                 CatOperationType.GET_CAT_BY_ID,
                 new GetCatByIdPayload(catId),
-                System.currentTimeMillis(),
                 chatId
             );
             CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(response.getStatus()) && response.getPayload() instanceof SingleCatResponsePayload payload && payload.getCat() != null) {
+            if (response.getPayload() instanceof SingleCatResponsePayload payload && payload.getCat() != null) {
                 Cat cat = payload.getCat();
                 sendCatDetails(cat, chatId, bot);
             } else {

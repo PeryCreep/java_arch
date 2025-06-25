@@ -1,7 +1,7 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
 import org.common.domain.Cat;
-import org.common.domain.User;
+import org.common.kafka.payloads.*;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.services.UserDataFacade;
@@ -19,23 +19,15 @@ import org.common.kafka.dto.CatRequestMessage;
 import org.common.kafka.dto.CatResponseMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.concurrent.TimeUnit;
-
 import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.common.kafka.dto.CatOperationType;
-import org.common.kafka.payloads.GetMyCatsPayload;
-import org.common.kafka.payloads.DeleteCatPayload;
-import org.common.kafka.payloads.FindUserByChatIdPayload;
-import org.common.kafka.payloads.UserResponsePayload;
-import org.common.kafka.payloads.CatListResponsePayload;
 
 @Component
 public class ViewMyCatsHandler implements StateHandler {
     private static final int PAGE_SIZE = 9;
     private final CatKafkaService catKafkaService;
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     public ViewMyCatsHandler(CatKafkaService catKafkaService) {
         this.catKafkaService = catKafkaService;
@@ -51,43 +43,13 @@ public class ViewMyCatsHandler implements StateHandler {
             return;
         }
 
-        try {
-            CatRequestMessage userReq = new CatRequestMessage(
-                CatOperationType.FIND_USER_BY_CHAT_ID,
-                new FindUserByChatIdPayload(chatId),
-                System.currentTimeMillis(),
-                chatId
-            );
-            CatResponseMessage userResp = catKafkaService.sendRequest(userReq).get(5, TimeUnit.SECONDS);
-            User user = null;
-            if (userResp.getPayload() instanceof UserResponsePayload payload && payload.getUser() != null) {
-                user = payload.getUser();
-            }
-            if (user == null) {
-                bot.sendMessage(SendMessage.builder().chatId(chatId).text("Пользователь не найден").build());
-                return;
-            }
-            int page = getCurrentPage(chatId, userDataFacade);
-            CatRequestMessage request = new CatRequestMessage(
-                CatOperationType.GET_MY_CATS,
-                new GetMyCatsPayload(user.getId(), page, PAGE_SIZE),
-                System.currentTimeMillis(),
-                chatId
-            );
-            CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(response.getStatus()) && response.getPayload() instanceof CatListResponsePayload payload && payload.getCats() != null) {
-                java.util.List<Cat> cats = payload.getCats();
-                if (cats.isEmpty()) {
-                    sendEmptyMessage(chatId, bot);
-                } else {
-                    sendCatsPage(chatId, cats, page, bot, userDataFacade);
-                }
-            } else {
-                sendEmptyMessage(chatId, bot);
-            }
-        } catch (Exception e) {
-            ErrorHandler.handleError(chatId, bot, e);
-        }
+        int page = getCurrentPage(chatId, userDataFacade);
+        CatRequestMessage request = new CatRequestMessage(
+            CatOperationType.GET_MY_CATS,
+            new GetMyCatsPayload(chatId, page, PAGE_SIZE),
+            chatId
+        );
+        catKafkaService.sendRequest(request);
     }
 
     private void handleDeleteCat(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
@@ -97,11 +59,10 @@ public class ViewMyCatsHandler implements StateHandler {
             CatRequestMessage request = new CatRequestMessage(
                 CatOperationType.DELETE_CAT,
                 new DeleteCatPayload(catId, chatId),
-                System.currentTimeMillis(),
                 chatId
             );
            CatResponseMessage response = catKafkaService.sendRequest(request).get(5, java.util.concurrent.TimeUnit.SECONDS);
-            if (!"OK".equals(response.getStatus())) {
+            if (response.getPayload() instanceof ErrorResponsePayload) {
                 ErrorHandler.handleError(chatId, bot, MessageBundle.getMessage("view.cat.delete.error"));
                 return;
             }
@@ -110,12 +71,11 @@ public class ViewMyCatsHandler implements StateHandler {
             CatRequestMessage listRequest = new CatRequestMessage(
                 CatOperationType.GET_MY_CATS,
                 new GetMyCatsPayload(chatId, page, PAGE_SIZE),
-                System.currentTimeMillis(),
                 chatId
             );
             CatResponseMessage listResponse = catKafkaService.sendRequest(listRequest).get(5, java.util.concurrent.TimeUnit.SECONDS);
             java.util.List<Cat> cats = java.util.Collections.emptyList();
-            if ("OK".equals(listResponse.getStatus()) && listResponse.getPayload() instanceof CatListResponsePayload payload && payload.getCats() != null) {
+            if (listResponse.getPayload() instanceof CatListResponsePayload payload && payload.getCats() != null) {
                 cats = payload.getCats();
             }
             if (cats.isEmpty() && page > 0) {

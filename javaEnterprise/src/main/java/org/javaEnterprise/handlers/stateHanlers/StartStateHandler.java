@@ -1,4 +1,4 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
@@ -39,11 +39,10 @@ public class StartStateHandler implements StateHandler {
             CatRequestMessage req = new CatRequestMessage(
                 CatOperationType.IS_USER_EXISTS,
                 new IsUserExistsPayload(chatId),
-                System.currentTimeMillis(),
                 chatId
             );
             CatResponseMessage resp = catKafkaService.sendRequest(req).get(5, TimeUnit.SECONDS);
-            if ("OK".equals(resp.getStatus()) && resp.getPayload() instanceof UserExistsResponsePayload payload) {
+            if (resp.getPayload() instanceof UserExistsResponsePayload payload) {
                 boolean exists = payload.isExists();
                 if (exists) {
                     userDataFacade.setState(chatId, UserState.MAIN_MENU);
