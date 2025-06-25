@@ -1,7 +1,7 @@
 package org.catService.kafka;
 
-import org.catService.kafka.dto.CatRequestMessage;
-import org.catService.kafka.dto.CatResponseMessage;
+import org.common.kafka.dto.CatRequestMessage;
+import org.common.kafka.dto.CatResponseMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -47,7 +47,6 @@ public class KafkaConfig {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "org.catService.kafka.dto.CatRequestMessage");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JsonDeserializer<>(CatRequestMessage.class));
     }

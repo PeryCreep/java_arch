@@ -1,7 +1,7 @@
 package org.catService.services;
 
-import org.catService.domain.User;
-import org.catService.domain.repository.UserRepository;
+import org.common.domain.User;
+import org.common.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

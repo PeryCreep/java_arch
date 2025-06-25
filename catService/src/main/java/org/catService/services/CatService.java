@@ -1,12 +1,16 @@
 package org.catService.services;
 
-import org.catService.domain.Cat;
-import org.catService.domain.CatRating;
-import org.catService.domain.User;
-import org.catService.domain.repository.CatRatingRepository;
-import org.catService.domain.repository.CatRepository;
+import org.common.domain.Cat;
+import org.common.domain.CatRating;
+import org.common.domain.User;
+import org.common.domain.repository.CatRatingRepository;
+import org.common.domain.repository.CatRepository;
+import org.common.kafka.payloads.CatResponsePayload;
+import org.common.kafka.payloads.GetRandomCatPayload;
+import org.common.kafka.payloads.GetRandomCatResponsePayload;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +57,7 @@ public class CatService {
 
     @Transactional(readOnly = true)
     public Page<Cat> getCatsByAuthor(Long authorId, int page, int size) {
-        return catRepository.findByAuthorIdOrderByCreatedAtDesc(authorId,
-                PageRequest.of(page, size));
+        return catRepository.findByAuthorIdOrderByCreatedAtDesc(authorId, PageRequest.of(page, size));
     }
 
     @Transactional
@@ -109,6 +112,18 @@ public class CatService {
         return existingRating.stream()
                 .filter(r -> !r.isLike())
                 .count();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<GetRandomCatResponsePayload> getRandomCatPayload() {
+        Optional<Cat> catOpt = getRandomCat();
+        if (catOpt.isPresent()) {
+            Cat cat = catOpt.get();
+            long likeCount = getLikeCount(cat);
+            long dislikeCount = getDislikeCount(cat);
+            return Optional.of(new GetRandomCatResponsePayload(cat, likeCount, dislikeCount));
+        }
+        return Optional.empty();
     }
 
     public UserService getUserService() {

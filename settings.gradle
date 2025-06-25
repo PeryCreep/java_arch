@@ -1,0 +1,4 @@
+rootProject.name = 'java_arch'
+include 'javaEnterprise'
+include 'catService'
+include 'common' 

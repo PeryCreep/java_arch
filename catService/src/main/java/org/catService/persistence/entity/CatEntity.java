@@ -1,7 +1,7 @@
 package org.catService.persistence.entity;
 
 import jakarta.persistence.*;
-import org.catService.domain.CatRating;
+import org.common.domain.CatRating;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
