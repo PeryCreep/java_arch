@@ -43,8 +43,8 @@ public class AddCatNameStateHandler implements StateHandler {
             String catName = update.getMessage().getText();
             userDataFacade.storeTextData(chatId, UserTempDataKey.CAT_NAME.name(), catName);
 
-            userDataFacade.setState(chatId, UserState.ADD_CAT_SAVE);
-            StateHandler handler = nextHandler();
+            userDataFacade.setState(chatId, UserState.ADD_CAT_CONFIRM);
+            StateHandler handler = handlerProvider.get(UserState.ADD_CAT_CONFIRM);
             handler.handle(update, bot, userDataFacade);
             return;
         }
@@ -67,6 +67,6 @@ public class AddCatNameStateHandler implements StateHandler {
 
     @Override
     public StateHandler nextHandler() {
-        return handlerProvider.get(UserState.ADD_CAT_SAVE);
+        return handlerProvider.get(UserState.ADD_CAT_CONFIRM);
     }
 }

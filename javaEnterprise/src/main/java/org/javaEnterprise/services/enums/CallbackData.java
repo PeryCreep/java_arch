@@ -7,5 +7,7 @@ public enum CallbackData {
     MYCATS_BACK,
     VIEW_MY_CATS,
     VIEW_RANDOM_CAT,
-    ADD_CAT_IMAGE
+    ADD_CAT_IMAGE,
+    CONFIRM_ADD_CAT,
+    RESTART_ADD_CAT
 }

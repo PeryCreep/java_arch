@@ -28,7 +28,7 @@ public class CatKafkaController {
                 case GET_RANDOM_CAT -> {
                     var payloadOpt = catService.getRandomCatPayload();
                     response = payloadOpt.map(getRandomCatPayload -> new CatResponseMessage(request.getRequestId(), null, getRandomCatPayload))
-                            .orElseGet(() -> new CatResponseMessage(request.getRequestId(), "Cat not found", null));
+                            .orElseGet(() -> new CatResponseMessage(request.getRequestId(), "Cat not found", new GetRandomCatResponsePayload()));
                 }
                 case GET_MY_CATS -> {
                     GetMyCatsPayload payload = (GetMyCatsPayload) request.getPayload();
