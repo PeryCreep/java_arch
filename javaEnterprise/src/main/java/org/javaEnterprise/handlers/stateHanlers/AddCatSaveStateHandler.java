@@ -34,45 +34,46 @@ public class AddCatSaveStateHandler implements StateHandler {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
-        String catName = userDataFacade.getTextData(chatId, UserTempDataKey.CAT_NAME.name());
-        byte[] photoData = userDataFacade.getFormData(chatId, UserTempDataKey.CAT_PHOTO_DATA.name(), byte[].class);
-
-        try {
-            CatRequestMessage request = new CatRequestMessage(
-                    CatOperationType.CREATE_CAT,
-                    new CreateCatPayload(chatId, catName, photoData),
-                    chatId
-            );
-            CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
-            if (response.getPayload() instanceof SuccessResponsePayload) {
-                userDataFacade.clearFormData(chatId, UserTempDataKey.CAT_PHOTO_DATA.name());
-                userDataFacade.clearFormData(chatId, UserTempDataKey.CAT_NAME.name());
-                InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
-                        .keyboard(List.of(List.of(
-                                InlineKeyboardButton.builder()
-                                        .text(MessageBundle.getMessage("button.back"))
-                                        .callbackData(CallbackData.MAIN_MENU.name())
-                                        .build()
-                        )))
-                        .build();
-                bot.sendMessage(SendMessage.builder()
-                        .chatId(chatId)
-                        .replyMarkup(keyboard)
-                        .text(MessageBundle.getMessage("view.add.cat.success"))
-                        .build());
-            } else {
+        if (update.hasCallbackQuery() && CallbackData.CONFIRM_ADD_CAT.name().equals(update.getCallbackQuery().getData())) {
+            String catName = userDataFacade.getTextData(chatId, UserTempDataKey.CAT_NAME.name());
+            byte[] photoData = userDataFacade.getFormData(chatId, UserTempDataKey.CAT_PHOTO_DATA.name(), byte[].class);
+            try {
+                CatRequestMessage request = new CatRequestMessage(
+                        CatOperationType.CREATE_CAT,
+                        new CreateCatPayload(chatId, catName, photoData),
+                        chatId
+                );
+                CatResponseMessage response = catKafkaService.sendRequest(request).get(5, TimeUnit.SECONDS);
+                if (response.getPayload() instanceof SuccessResponsePayload) {
+                    userDataFacade.clearFormData(chatId, UserTempDataKey.CAT_PHOTO_DATA.name());
+                    userDataFacade.clearFormData(chatId, UserTempDataKey.CAT_NAME.name());
+                    InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
+                            .keyboard(List.of(List.of(
+                                    InlineKeyboardButton.builder()
+                                            .text(MessageBundle.getMessage("button.back"))
+                                            .callbackData(CallbackData.MAIN_MENU.name())
+                                            .build()
+                            )))
+                            .build();
+                    bot.sendMessage(SendMessage.builder()
+                            .chatId(chatId)
+                            .replyMarkup(keyboard)
+                            .text(MessageBundle.getMessage("view.add.cat.success"))
+                            .build());
+                } else {
+                    bot.sendMessage(SendMessage.builder()
+                            .chatId(chatId)
+                            .text(MessageBundle.getMessage("view.add.cat.error"))
+                            .build());
+                }
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
                 bot.sendMessage(SendMessage.builder()
                         .chatId(chatId)
                         .text(MessageBundle.getMessage("view.add.cat.error"))
                         .build());
             }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            bot.sendMessage(SendMessage.builder()
-                    .chatId(chatId)
-                    .text(MessageBundle.getMessage("view.add.cat.error"))
-                    .build());
+            userDataFacade.setState(chatId, UserState.MAIN_MENU);
         }
-        userDataFacade.setState(chatId, UserState.MAIN_MENU);
     }
 } 

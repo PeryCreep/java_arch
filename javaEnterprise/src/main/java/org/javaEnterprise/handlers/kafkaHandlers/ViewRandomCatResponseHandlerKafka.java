@@ -27,12 +27,17 @@ public class ViewRandomCatResponseHandlerKafka implements IUniversalKafkaRespons
         Long chatId = response.getRequestId();
         var payload = response.getPayload();
         if (payload instanceof GetRandomCatResponsePayload randomCatPayload) {
-            long likeCount = randomCatPayload.getLikeCount() != null ? randomCatPayload.getLikeCount() : 0;
-            long dislikeCount = randomCatPayload.getDislikeCount() != null ? randomCatPayload.getDislikeCount() : 0;
-            sendCatWithButtons(randomCatPayload.getCat(), chatId, bot, likeCount, dislikeCount);
-
+            if(randomCatPayload.getCat() != null) {
+                long likeCount = randomCatPayload.getLikeCount() != null ? randomCatPayload.getLikeCount() : 0;
+                long dislikeCount = randomCatPayload.getDislikeCount() != null ? randomCatPayload.getDislikeCount() : 0;
+                sendCatWithButtons(randomCatPayload.getCat(), chatId, bot, likeCount, dislikeCount);
+            } else {
+                bot.sendMessage(SendMessage.builder().chatId(chatId)
+                        .text(MessageBundle.getMessage("error.no.cats"))
+                        .build());
+            }
         } else if (payload instanceof ErrorResponsePayload error) {
-        bot.sendMessage(SendMessage.builder().chatId(chatId)
+            bot.sendMessage(SendMessage.builder().chatId(chatId)
                 .text(MessageBundle.getMessage("error.no.cats"))
                 .build());
         }

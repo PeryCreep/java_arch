@@ -27,6 +27,7 @@ public class HandlerProvider {
         handlerBeanNames.put(UserState.ADD_CAT_IMAGE, "addCatImageStateHandler");
         handlerBeanNames.put(UserState.ADD_CAT_NAME, "addCatNameStateHandler");
         handlerBeanNames.put(UserState.ADD_CAT_SAVE, "addCatSaveStateHandler");
+        handlerBeanNames.put(UserState.ADD_CAT_CONFIRM, "addCatConfirmStateHandler");
         handlerBeanNames.put(UserState.VIEW_RANDOM_CAT, "viewRandomCatHandler");
         handlerBeanNames.put(UserState.VIEW_CAT_DETAILS, "catDetailsHandler");
     }
