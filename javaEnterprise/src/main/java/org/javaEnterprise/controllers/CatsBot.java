@@ -1,6 +1,6 @@
 package org.javaEnterprise.controllers;
 
-import org.javaEnterprise.handlers.HandlerProvider;
+import org.javaEnterprise.handlers.stateHanlers.HandlerProvider;
 import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.UserState;
