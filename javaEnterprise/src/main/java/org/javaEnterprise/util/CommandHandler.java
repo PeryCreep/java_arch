@@ -1,7 +1,7 @@
 package org.javaEnterprise.util;
 
 import org.javaEnterprise.controllers.CatsBot;
-import org.javaEnterprise.handlers.HandlerProvider;
+import org.javaEnterprise.handlers.stateHanlers.HandlerProvider;
 import org.javaEnterprise.handlers.states.StateHandler;
 import org.javaEnterprise.handlers.states.UserState;
 import org.javaEnterprise.services.UserDataFacade;
