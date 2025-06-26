@@ -1,8 +1,9 @@
-package org.javaEnterprise.handlers;
+package org.javaEnterprise.handlers.stateHanlers;
 
-import org.javaEnterprise.controllers.CatsBot;
 import org.javaEnterprise.handlers.states.StateHandler;
-import org.javaEnterprise.services.UserSessionService;
+import org.javaEnterprise.handlers.states.ITelegramMessageWorker;
+import org.javaEnterprise.services.UserDataFacade;
+import org.javaEnterprise.services.enums.CallbackData;
 import org.javaEnterprise.util.MessageBundle;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,14 +18,14 @@ import java.util.List;
 public class MainMenuHandler implements StateHandler {
 
     @Override
-    public void handle(Update update, UserSessionService sessionService, CatsBot bot) {
+    public void handle(Update update, ITelegramMessageWorker bot, UserDataFacade userDataFacade) {
         Long chatId = bot.getChatId(update);
         if (chatId == null) return;
 
         List<InlineKeyboardButton> row = new ArrayList<>(List.of(
-                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.my.cat")).callbackData("VIEW_MY_CATS").build(),
-                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.random.cat")).callbackData("VIEW_RANDOM_CAT").build(),
-                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.add.cat")).callbackData("ADD_CAT_IMAGE").build()
+                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.my.cat")).callbackData(CallbackData.VIEW_MY_CATS.name()).build(),
+                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.random.cat")).callbackData(CallbackData.VIEW_RANDOM_CAT.name()).build(),
+                InlineKeyboardButton.builder().text(MessageBundle.getMessage("button.add.cat")).callbackData(CallbackData.ADD_CAT_IMAGE.name()).build()
         ));
 
         InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()

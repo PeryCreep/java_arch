@@ -1,0 +1,7 @@
+.gradle
+**/.gradle
+**/data
+**/gradle
+**/bin
+**/build
+.idea
